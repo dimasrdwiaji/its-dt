@@ -228,3 +228,6 @@ data/ETH_GlobalCanopyHeight_10m_2020_S09E111_Map_SD.tif
 # Others
 cache/
 .git/
+
+# Tokens
+token.json
