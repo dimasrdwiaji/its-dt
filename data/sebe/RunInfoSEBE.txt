@@ -1,16 +1,16 @@
-This file provides run settings for the SEBE run initiated at: Fri, 25 Sep 2026 14:04:52
+This file provides run settings for the SEBE run initiated at: Thu, 01 Oct 2026 15:09:57
 Version: SEBE v2015a
 
 SURFACE DATA
-Digital surface model (DSM): C:\Users\Dimas RD\Documents\projects\its_dt\data\synthetic_dsm_2m_r2.tif
+Digital surface model (DSM): C:/Users/Dimas RD/Documents/projects/its_dt/data/synthetic_dsm_2m.tif
 Model domain: rows = 896, columns = 668
 Projected referece system: WGS 84 / UTM zone 49S
 Geographical coordinate system: WGS 84
-Latitude: -7.290675367394872
-Longitude: 112.78933550138024
-UTC: 0.0
+Latitude: -7.290675367242425
+Longitude: 112.789335501176
+UTC: 7.0
 Transmissivity of light through vegetation: 0.03
-Digital vegetation canopy model (CDSM): C:/Users/Dimas RD/Documents/projects/its_dt/data/canopy_height_aligned.tif
+Digital vegetation canopy model (CDSM): C:/Users/Dimas RD/Documents/projects/its_dt/data/canopy_dsm.tif
 Trunkzone estimated from CDSM
 Trunkzone as percent of canopy height: 0.25
 
