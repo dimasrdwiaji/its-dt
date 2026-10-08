@@ -229,3 +229,4 @@ data/ETH_GlobalCanopyHeight_10m_2020_S09E111_Map_SD.tif
 cache/
 .git/
 *.aux.xmldata/sebe/Energyyearwall.txt
+data/buildings_dt_master.geojson
