@@ -1,0 +1,157 @@
+{
+    "ecology": {
+        "trees": [
+            {
+                "id": "tree_trembesi",
+                "name": "Trembesi (Samanea saman)",
+                "type": "tree",
+                "description": "Large canopy tree, superior tropical shade and high carbon sequestration.",
+                "cost_idr": 250000,
+                "co2_mitigation_kg_yr": 28.5,
+                "canopy_radius_m": 10,
+                "sketchfab_query": "samanea_saman",
+                "rf_deltas": {
+                    "greeness": 0.15,
+                    "wetness": 0.05,
+                    "dryness": -0.1,
+                    "NBR": 0.1,
+                    "NDMI": 0.05
+                }
+            },
+            {
+                "id": "tree_angsana",
+                "name": "Angsana (Pterocarpus indicus)",
+                "type": "tree",
+                "description": "Medium urban canopy tree, good for road margins and pedestrian walkways.",
+                "cost_idr": 150000,
+                "co2_mitigation_kg_yr": 15.0,
+                "canopy_radius_m": 6,
+                "sketchfab_query": "generic_broadleaf_tree",
+                "rf_deltas": {
+                    "greeness": 0.1,
+                    "wetness": 0.03,
+                    "dryness": -0.05,
+                    "NBR": 0.08,
+                    "NDMI": 0.03
+                }
+            }
+        ],
+        "vertical_greening": [
+            {
+                "id": "vertical_frame_lky",
+                "name": "Lee Kuan Yew Modular Trellis & Planter Frame",
+                "type": "vertical_greening",
+                "description": "Singapore-style modular facade planter box with stainless steel climbing trellis and drip irrigation. Prevents facade staining and facilitates maintenance.",
+                "plant_species": "Vernonia elliptica (Lee Kuan Yew)",
+                "cost_idr_per_m2": 650000,
+                "co2_mitigation_kg_m2_yr": 8.5,
+                "wall_cooling_celsius": 2.4,
+                "frame_depth_m": 0.35,
+                "sketchfab_query": "green_wall"
+            }
+        ]
+    },
+    "energy": {
+        "packing_factors": {
+            "flat_roof": 0.60,
+            "tilted_roof": 0.80
+        },
+        "solar_panels": [
+            {
+                "id": "mono_450w",
+                "brand": "Tier 1 Monocrystalline 450Wp",
+                "power_wp": 450,
+                "area_m2": 2.1,
+                "efficiency": 0.205,
+                "cost_per_panel_idr": 2300000,
+                "cost_per_kwp_idr": 15000000,
+                "lifespan_years": 25,
+                "description": "High-durability all-weather mono PERC panel for commercial rooftops."
+            },
+            {
+                "id": "mono_550w",
+                "brand": "High-Efficiency Monocrystalline 550Wp",
+                "power_wp": 550,
+                "area_m2": 2.58,
+                "efficiency": 0.213,
+                "cost_per_panel_idr": 2800000,
+                "cost_per_kwp_idr": 16000000,
+                "lifespan_years": 25,
+                "description": "Commercial large-format module optimized for high irradiance tropical installations."
+            },
+            {
+                "id": "bifacial_600w",
+                "brand": "Ultra-Power Bifacial 600Wp",
+                "power_wp": 600,
+                "area_m2": 2.75,
+                "efficiency": 0.220,
+                "cost_per_panel_idr": 3400000,
+                "cost_per_kwp_idr": 17500000,
+                "lifespan_years": 30,
+                "description": "Double-glass bifacial module capturing albedo irradiance from roof surface."
+            }
+        ],
+        "grid_params": {
+            "pln_tariff_idr_per_kwh": 1444.0,
+            "jamali_emission_factor_kg_per_kwh": 0.79
+        }
+    },
+    "hydrology": {
+        "toren_options": [
+            {
+                "id": "toren_1000",
+                "name": "Toren Penguin 1,000 L (1.0 m³)",
+                "capacity_liters": 1000,
+                "capacity_m3": 1.0,
+                "cost_idr": 1650000,
+                "diameter_m": 1.05,
+                "height_m": 1.45
+            },
+            {
+                "id": "toren_2250",
+                "name": "Toren Penguin 2,250 L (2.25 m³)",
+                "capacity_liters": 2250,
+                "capacity_m3": 2.25,
+                "cost_idr": 3300000,
+                "diameter_m": 1.40,
+                "height_m": 1.80
+            },
+            {
+                "id": "toren_5000",
+                "name": "Toren Profil Tank 5,000 L (5.0 m³)",
+                "capacity_liters": 5000,
+                "capacity_m3": 5.0,
+                "cost_idr": 6800000,
+                "diameter_m": 1.85,
+                "height_m": 2.30
+            },
+            {
+                "id": "toren_10000",
+                "name": "Toren Profil Tank 10,000 L (10.0 m³)",
+                "capacity_liters": 10000,
+                "capacity_m3": 10.0,
+                "cost_idr": 14500000,
+                "diameter_m": 2.30,
+                "height_m": 2.85
+            }
+        ],
+        "ground_interventions": [
+            {
+                "id": "biopori_dry_well",
+                "name": "Sumur Resapan Moduler (Dry Well)",
+                "type": "dry_well",
+                "cost_idr": 1800000,
+                "storage_m3": 2.0,
+                "diameter_m": 1.0,
+                "depth_m": 2.5
+            },
+            {
+                "id": "retention_pond",
+                "name": "Kolam Retensi (Retention Pond)",
+                "type": "pond",
+                "cost_idr_per_m3": 350000,
+                "standard_depth_m": 1.5
+            }
+        ]
+    }
+}

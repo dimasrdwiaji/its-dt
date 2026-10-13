@@ -230,3 +230,6 @@ cache/
 .git/
 *.aux.xmldata/sebe/Energyyearwall.txt
 data/buildings_dt_master.geojson
+
+# API
+token.json
