@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { useMapStore } from '@/stores/mapStore'
 import { useScenarioStore } from '@/stores/scenarioStore'
-import { MAP_STYLE_OPTIONS } from '@/constants/mapStyles'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
-import type { ActiveTool, BaseMapStyle } from '@/types'
+import type { ActiveTool } from '@/types'
 
 const mapStore = useMapStore()
 const scenarioStore = useScenarioStore()
@@ -26,10 +25,6 @@ const treeSpeciesOptions = [
   { label: 'Trembesi (10m)', value: 'tree_trembesi' },
   { label: 'Angsana (6m)', value: 'tree_angsana' }
 ]
-
-function onStyleChange(newStyle: BaseMapStyle) {
-  mapStore.setBaseMapStyle(newStyle)
-}
 </script>
 
 <template>
@@ -41,7 +36,7 @@ function onStyleChange(newStyle: BaseMapStyle) {
       </div>
       <div class="brand-text">
         <span class="brand-title">ITS Digital Twin</span>
-        <span class="brand-subtitle">Campus LoD1 Analysis</span>
+        <span class="brand-subtitle">Sustainability Scenario Analysis</span>
       </div>
     </div>
 
@@ -165,36 +160,6 @@ function onStyleChange(newStyle: BaseMapStyle) {
         :outlined="mapStore.activeTool !== 'retention_pond'"
         @click="handleToolSelect('retention_pond')"
       />
-    </div>
-
-    <!-- Spacer -->
-    <div class="flex-grow-1"></div>
-
-    <!-- Basemap Selector -->
-    <div class="basemap-selector">
-      <Select
-        v-model="mapStore.baseMapStyle"
-        :options="MAP_STYLE_OPTIONS"
-        optionLabel="label"
-        optionValue="key"
-        placeholder="Select Basemap"
-        class="w-9rem"
-        size="small"
-        @change="onStyleChange($event.value)"
-      >
-        <template #value="slotProps">
-          <div v-if="slotProps.value" class="flex align-items-center gap-2">
-            <i :class="MAP_STYLE_OPTIONS.find(o => o.key === slotProps.value)?.icon"></i>
-            <span>{{ MAP_STYLE_OPTIONS.find(o => o.key === slotProps.value)?.label }}</span>
-          </div>
-        </template>
-        <template #option="slotProps">
-          <div class="flex align-items-center gap-2">
-            <i :class="slotProps.option.icon"></i>
-            <span>{{ slotProps.option.label }}</span>
-          </div>
-        </template>
-      </Select>
     </div>
   </header>
 </template>

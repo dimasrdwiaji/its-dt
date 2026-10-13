@@ -1,15 +1,28 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
+import { useScenarioStore } from '@/stores/scenarioStore'
 import SolarBuildingModule from '@/components/scenarios/SolarBuildingModule.vue'
 import EcologyBuildingModule from '@/components/scenarios/EcologyBuildingModule.vue'
 import HydrologyBuildingModule from '@/components/scenarios/HydrologyBuildingModule.vue'
+import FormulaTooltip from '@/components/common/FormulaTooltip.vue'
+import Accordion from 'primevue/accordion'
+import AccordionPanel from 'primevue/accordionpanel'
+import AccordionHeader from 'primevue/accordionheader'
+import AccordionContent from 'primevue/accordioncontent'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import Divider from 'primevue/divider'
+import * as turf from '@turf/turf'
 
 const mapStore = useMapStore()
+const scenarioStore = useScenarioStore()
 const bldg = computed(() => mapStore.selectedBuilding)
+
+const buildingFeature = computed(() => {
+  if (!bldg.value || !mapStore.buildingData?.features) return null
+  return mapStore.buildingData.features.find((f: any) => f.properties?.id === bldg.value?.id)
+})
 
 const buildingName = computed(() => {
   if (!bldg.value) return 'Unknown Building'
@@ -22,36 +35,105 @@ const buildingType = computed(() => {
 })
 
 const heightMeters = computed(() => {
-  if (!bldg.value) return '8.0 m'
+  if (!bldg.value) return 8.0
   const h = bldg.value.height_google || bldg.value.height_osm || 8
-  return `${Number(h).toFixed(1)} m`
+  return Number(Number(h).toFixed(1))
+})
+
+const roofAreaM2 = computed(() => {
+  return Number(bldg.value?.area) || 0
 })
 
 const formattedArea = computed(() => {
-  if (!bldg.value) return '0 m²'
-  return `${Number(bldg.value.area).toLocaleString('en-US', { maximumFractionDigits: 1 })} m²`
+  return `${roofAreaM2.value.toLocaleString('id-ID', { maximumFractionDigits: 1 })} m²`
 })
 
-const energyMinMWh = computed(() => {
-  if (!bldg.value) return '0'
-  return (Number(bldg.value.pot_energy_min) / 1000).toFixed(1)
+// Exact polygon boundary perimeter in meters using Turf.js for arbitrary non-rectangular buildings
+const exactPerimeterM = computed(() => {
+  if (buildingFeature.value) {
+    try {
+      const line = turf.polygonToLine(buildingFeature.value as any)
+      const lenKm = turf.length(line as any, { units: 'kilometers' })
+      return Math.round(lenKm * 1000)
+    } catch (e) {
+      // fallback
+    }
+  }
+  return Math.round(4.1 * Math.sqrt(roofAreaM2.value || 100))
 })
 
-const energyMaxMWh = computed(() => {
-  if (!bldg.value) return '0'
-  return (Number(bldg.value.pot_energy_max) / 1000).toFixed(1)
+// Gross wall area and net plantable facade
+const grossWallAreaM2 = computed(() => {
+  return Math.round(exactPerimeterM.value * heightMeters.value)
+})
+
+const netPlantableFacadeM2 = computed(() => {
+  return Math.round(grossWallAreaM2.value * 0.40)
+})
+
+// Shared Rooftop Space Budget: Usable roof area
+const PACKING_FACTOR = 0.70 // Average packing factor
+const totalUsableRoofAreaM2 = computed(() => {
+  return Math.round(roofAreaM2.value * PACKING_FACTOR)
+})
+
+// Active interventions sharing the roof
+const existingSolar = computed(() => {
+  return bldg.value ? scenarioStore.getBuildingSolar(bldg.value.id) : null
+})
+
+const existingToren = computed(() => {
+  return bldg.value ? scenarioStore.getBuildingToren(bldg.value.id) : null
+})
+
+const solarOccupiedAreaM2 = computed(() => {
+  if (!existingSolar.value) return 0
+  return Number(existingSolar.value.metadata?.areaOccupiedM2) || (existingSolar.value.quantity * 2.5)
+})
+
+const torenOccupiedAreaM2 = computed(() => {
+  if (!existingToren.value) return 0
+  return Number(existingToren.value.metadata?.areaOccupiedM2) || (existingToren.value.quantity * 2.7)
+})
+
+// Cross-reactivity: remaining space available for each module
+const availableRoofForSolar = computed(() => {
+  return Math.max(0, totalUsableRoofAreaM2.value - torenOccupiedAreaM2.value)
+})
+
+const availableRoofForToren = computed(() => {
+  return Math.max(0, totalUsableRoofAreaM2.value - solarOccupiedAreaM2.value)
+})
+
+const unallocatedRoofAreaM2 = computed(() => {
+  return Math.max(0, totalUsableRoofAreaM2.value - solarOccupiedAreaM2.value - torenOccupiedAreaM2.value)
+})
+
+const solarPct = computed(() => {
+  if (totalUsableRoofAreaM2.value <= 0) return 0
+  return Math.min(100, Math.round((solarOccupiedAreaM2.value / totalUsableRoofAreaM2.value) * 100))
+})
+
+const torenPct = computed(() => {
+  if (totalUsableRoofAreaM2.value <= 0) return 0
+  return Math.min(100, Math.round((torenOccupiedAreaM2.value / totalUsableRoofAreaM2.value) * 100))
+})
+
+const unallocatedPct = computed(() => {
+  return Math.max(0, 100 - solarPct.value - torenPct.value)
+})
+
+// Metrics
+const specificYield = computed(() => {
+  if (!bldg.value || !bldg.value.area) return '1,280'
+  const kwp = Number(bldg.value.area) * 0.2
+  const yieldVal = Number(bldg.value.pot_energy_mean) / kwp
+  return Math.round(yieldVal).toLocaleString('id-ID')
 })
 
 const annualYieldMWh = computed(() => {
   if (!bldg.value) return '0'
   return (Number(bldg.value.pot_energy_mean) / 1000).toFixed(1)
-})
-
-const specificYield = computed(() => {
-  if (!bldg.value || !bldg.value.area) return '1,280'
-  const kwp = Number(bldg.value.area) * 0.2
-  const yieldVal = Number(bldg.value.pot_energy_mean) / kwp
-  return Math.round(yieldVal).toLocaleString('en-US')
 })
 
 const shadingPercent = computed(() => {
@@ -78,58 +160,6 @@ const floodSeverity = computed(() => {
   }
 })
 
-// Dynamic gauge bar adapting to mapStore.colorMode
-const activeGaugeConfig = computed(() => {
-  if (!bldg.value) return null
-
-  switch (mapStore.colorMode) {
-    case 'energy': {
-      const val = Number(bldg.value.pot_energy_mean) || 0
-      const pct = Math.min(100, Math.max(0, ((val - 50000) / (1200000 - 50000)) * 100))
-      return {
-        title: 'Solar Energy Potential',
-        gradient: 'linear-gradient(to right, #fef08a, #f97316, #dc2626)',
-        percent: pct,
-        minLabel: 'Low (50 MWh)',
-        maxLabel: 'High (1,200+ MWh)'
-      }
-    }
-    case 'ecology': {
-      const val = Number(bldg.value.l_shade_mean) || 0
-      const pct = Math.min(100, Math.max(0, (val / 0.5) * 100))
-      return {
-        title: 'Roof Shading Loss',
-        gradient: 'linear-gradient(to right, #bbf7d0, #16a34a, #14532d)',
-        percent: pct,
-        minLabel: 'Low Shade (0%)',
-        maxLabel: 'Dense Shade (50%+)'
-      }
-    }
-    case 'hydrology': {
-      const val = Number(bldg.value.adjacent_flood_risk_m3) || 0
-      const pct = Math.min(100, Math.max(0, (val / 150) * 100))
-      return {
-        title: 'Adjacent Flood Vulnerability',
-        gradient: 'linear-gradient(to right, #bae6fd, #0284c7, #1e3a5f)',
-        percent: pct,
-        minLabel: 'Low (0 m³)',
-        maxLabel: 'High (150+ m³)'
-      }
-    }
-    default: {
-      const area = Number(bldg.value.area) || 0
-      const pct = Math.min(100, Math.max(0, ((area - 100) / (4000 - 100)) * 100))
-      return {
-        title: 'Building Footprint Scale',
-        gradient: 'linear-gradient(to right, #94a3b8, #cbd5e1, #f8fafc)',
-        percent: pct,
-        minLabel: 'Compact (<100 m²)',
-        maxLabel: 'Large (4,000+ m²)'
-      }
-    }
-  }
-})
-
 function closeCard() {
   mapStore.setSelectedBuilding(null)
 }
@@ -143,24 +173,20 @@ function closeCard() {
         <h2 class="building-name">{{ buildingName }}</h2>
         <span class="building-sub">{{ buildingType }}</span>
       </div>
-      <div class="flex align-items-center gap-2">
-        <span class="lod-tag">LoD1</span>
-        <Button
-          icon="pi pi-times"
-          text
-          rounded
-          size="small"
-          class="close-btn"
-          @click="closeCard"
-        />
-      </div>
+      <Button
+        icon="pi pi-times"
+        text
+        rounded
+        size="small"
+        @click="closeCard"
+      />
     </div>
 
-    <!-- Stat Chips Grid: Clean height without floor derivation -->
+    <!-- Stat Chips Grid: Clean Height & Area -->
     <div class="stat-chips-grid">
       <div class="stat-chip">
         <span class="chip-label">Building Height</span>
-        <span class="chip-value">{{ heightMeters }}</span>
+        <span class="chip-value">{{ heightMeters }} m</span>
       </div>
       <div class="stat-chip">
         <span class="chip-label">Roof Area</span>
@@ -168,14 +194,82 @@ function closeCard() {
       </div>
     </div>
 
-    <Divider class="my-2" />
+    <!-- Live Roof Footprint Budget Segmented Bar -->
+    <div class="roof-budget-card">
+      <div class="flex justify-between align-items-center mb-1">
+        <div class="flex align-items-center gap-1">
+          <span class="budget-title">Rooftop Space Allocation</span>
+          <FormulaTooltip
+            title="Shared Rooftop Space Constraint"
+            plainWords="Rooftop usable footprint is capped at 70% of gross roof area for safety parapets, structural setbacks, and maintenance pathways. Solar photovoltaic arrays and rainwater toren tanks compete for this same physical surface."
+            formula="A_usable = A_roof × 0.70  where  A_solar + A_toren ≤ A_usable"
+            :variables="[
+              { name: 'Total Usable Roof', value: `${totalUsableRoofAreaM2} m² (70% net factor)` },
+              { name: 'Solar Panels Area', value: `${Math.round(solarOccupiedAreaM2)} m² (${solarPct}%)` },
+              { name: 'Rainwater Tanks Area', value: `${Math.round(torenOccupiedAreaM2)} m² (${torenPct}%)` },
+              { name: 'Unallocated Space', value: `${Math.round(unallocatedRoofAreaM2)} m² (${unallocatedPct}%)` }
+            ]"
+            standard="Spatial Mutual Exclusion & Rooftop Maintenance Clearance Standard"
+          />
+        </div>
+        <span class="text-xs text-slate-400">{{ totalUsableRoofAreaM2 }} m² usable</span>
+      </div>
 
-    <!-- General Building Metrics Overview -->
+      <!-- Segmented Bar -->
+      <div class="segmented-bar">
+        <div
+          v-if="solarPct > 0"
+          class="bar-segment bar-solar"
+          :style="{ width: `${solarPct}%` }"
+          title="Solar Panels"
+        ></div>
+        <div
+          v-if="torenPct > 0"
+          class="bar-segment bar-toren"
+          :style="{ width: `${torenPct}%` }"
+          title="Toren Tanks"
+        ></div>
+        <div
+          v-if="unallocatedPct > 0"
+          class="bar-segment bar-unallocated"
+          :style="{ width: `${unallocatedPct}%` }"
+          title="Available Unallocated"
+        ></div>
+      </div>
+
+      <!-- Legend for Bar -->
+      <div class="flex justify-between text-xs mt-1 text-slate-400">
+        <span class="flex align-items-center gap-1">
+          <span class="dot dot-solar"></span> Solar: {{ Math.round(solarOccupiedAreaM2) }} m²
+        </span>
+        <span class="flex align-items-center gap-1">
+          <span class="dot dot-toren"></span> Toren: {{ Math.round(torenOccupiedAreaM2) }} m²
+        </span>
+        <span class="flex align-items-center gap-1">
+          <span class="dot dot-avail"></span> Free: {{ Math.round(unallocatedRoofAreaM2) }} m²
+        </span>
+      </div>
+    </div>
+
+    <Divider class="my-1" />
+
+    <!-- General Building Environmental Metrics Overview -->
     <div class="metrics-list">
       <div class="metric-row">
         <span class="metric-label">
           <i class="pi pi-bolt mr-2 text-yellow-500"></i>
           Specific PV Yield
+          <FormulaTooltip
+            title="Specific Photovoltaic Yield"
+            plainWords="Annual electrical energy output normalized per kilowatt-peak (kWp) of installed photovoltaic capacity under Surabaya climatic conditions."
+            formula="Yield = Annual Generation (kWh) ÷ Installed Capacity (kWp)"
+            :variables="[
+              { name: 'Annual Mean', value: `${annualYieldMWh} MWh/yr` },
+              { name: 'Standard Capacity', value: `${(roofAreaM2 * 0.2).toFixed(1)} kWp` }
+            ]"
+            standard="Surabaya Global Horizontal Irradiance (GHI) Standard"
+            source="SEBE Solar Modeling on 2m Combined DSM"
+          />
         </span>
         <span class="metric-value">{{ specificYield }} kWh/kWp/yr</span>
       </div>
@@ -184,14 +278,33 @@ function closeCard() {
         <span class="metric-label">
           <i class="pi pi-sun mr-2 text-orange-500"></i>
           Mean Solar Potential
+          <FormulaTooltip
+            title="Mean Building Rooftop Solar Potential"
+            plainWords="Annual cumulative solar electricity generation across the entire rooftop calculated from 8,760 hours of ray-traced solar irradiance, incorporating system efficiency and performance ratio."
+            formula="E_PV = ∑ (GTI_pixel × η_system × PR) ÷ 1,000  (MWh/yr)"
+            :variables="[
+              { name: 'Performance Ratio', value: '0.75' },
+              { name: 'Module Efficiency', value: '20.0%' }
+            ]"
+            source="Energyyearroof.tif SEBE Simulation"
+          />
         </span>
         <span class="metric-value font-semibold text-primary">{{ annualYieldMWh }} MWh/yr</span>
       </div>
 
       <div class="metric-row">
         <span class="metric-label">
-          <i class="pi pi-tree mr-2 text-green-500"></i>
+          <i class="pi pi-building mr-2 text-green-500"></i>
           Roof Shading Loss
+          <FormulaTooltip
+            title="Roof Shadow Casting Loss"
+            plainWords="Percentage of theoretical daylight hours obstructed by neighboring taller buildings, vegetation, and surrounding terrain throughout the year."
+            formula="Shading Loss = (Shaded Hours ÷ Daylight Hours) × 100%"
+            :variables="[
+              { name: 'Mean Shaded Ratio', value: `${shadingPercent}` }
+            ]"
+            source="Ray-traced shadow casting across 365 daily solar azimuth angles"
+          />
         </span>
         <span class="metric-value">{{ shadingPercent }}</span>
       </div>
@@ -200,6 +313,17 @@ function closeCard() {
         <span class="metric-label">
           <i class="pi pi-cloud mr-2 text-blue-400"></i>
           Storm Roof Runoff
+          <FormulaTooltip
+            title="Peak Storm Roof Runoff Volume"
+            plainWords="Total volume of rainwater discharging off the roof during a 2-hour design storm computed using the standard Rational Hydrologic Method."
+            formula="Q = C × I × A_roof  (m³)"
+            :variables="[
+              { name: 'Runoff Coef C', value: '0.90 (Impervious Concrete/Metal)' },
+              { name: 'Rainfall Intensity I', value: '120 mm (0.12 m, Surabaya 10-yr storm)' },
+              { name: 'Roof Area', value: `${roofAreaM2} m²` }
+            ]"
+            standard="Rational Method (SNI 2415:2016 Hydrologic Flood Calculation)"
+          />
         </span>
         <span class="metric-value">{{ runoffVolume }} m³</span>
       </div>
@@ -208,88 +332,101 @@ function closeCard() {
         <span class="metric-label">
           <i class="pi pi-exclamation-triangle mr-2 text-red-400"></i>
           Adjacent Flood Risk
+          <FormulaTooltip
+            title="Adjacent Flood Vulnerability Rating"
+            plainWords="Flooding vulnerability determined by the maximum surface water ponding depth within depressions directly adjacent to the building perimeter."
+            formula="Risk Level = f(Max Depression Pooling Depth)"
+            :variables="[
+              { name: 'Low Risk', value: '< 0.10 m' },
+              { name: 'Medium Risk', value: '0.10 - 0.30 m' },
+              { name: 'High Risk', value: '0.30 - 0.60 m' },
+              { name: 'Critical Risk', value: '> 0.60 m' }
+            ]"
+            source="DEMNAS Pit-Filled Flow Accumulation & Pooling Depth"
+          />
         </span>
         <Tag :value="floodRisk" :severity="floodSeverity" size="small" />
       </div>
     </div>
 
-    <Divider class="my-2" />
+    <Divider class="my-1" />
 
-    <!-- Module-Adaptive Gauge Bar -->
-    <div v-if="activeGaugeConfig" class="potential-section">
-      <div class="potential-header">
-        <span class="potential-title">{{ activeGaugeConfig.title }}</span>
+    <!-- Multi-Intervention Accordions Section -->
+    <div class="interventions-accordion-section">
+      <div class="section-title-row mb-2">
+        <span class="section-heading">BUILDING INTERVENTIONS</span>
+        <span class="section-subheading">Configure multiple modules simultaneously</span>
       </div>
-      <div
-        class="gradient-progress-bar"
-        :style="{ background: activeGaugeConfig.gradient }"
-      >
-        <div
-          class="progress-marker"
-          :style="{ left: `${activeGaugeConfig.percent}%` }"
-        ></div>
-      </div>
-      <div class="potential-labels">
-        <span>{{ activeGaugeConfig.minLabel }}</span>
-        <span>{{ activeGaugeConfig.maxLabel }}</span>
-      </div>
-    </div>
 
-    <Divider class="my-2" />
+      <Accordion :value="['solar']" multiple class="building-accordions">
+        
+        <!-- Tab 1: Rooftop Solar PV -->
+        <AccordionPanel value="solar">
+          <AccordionHeader>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-sun text-yellow-400 text-xs"></i>
+              <span class="text-xs font-semibold">Rooftop Solar PV</span>
+              <Tag
+                v-if="existingSolar"
+                value="Installed"
+                severity="warn"
+                class="ml-auto text-xs py-0 px-1"
+              />
+            </div>
+          </AccordionHeader>
+          <AccordionContent>
+            <SolarBuildingModule
+              :building="bldg"
+              :availableRoofM2="availableRoofForSolar"
+            />
+          </AccordionContent>
+        </AccordionPanel>
 
-    <!-- Module-Specific What-If Interaction Section -->
-    <div class="interactive-section">
-      <!-- Solar Module: Panel slider & dual dials -->
-      <SolarBuildingModule
-        v-if="mapStore.colorMode === 'energy'"
-        :building="bldg"
-      />
+        <!-- Tab 2: Vertical Greening (Facade) -->
+        <AccordionPanel value="ecology">
+          <AccordionHeader>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-leaf text-green-400 text-xs"></i>
+              <span class="text-xs font-semibold">Vertical Greening (Facade)</span>
+              <Tag
+                v-if="scenarioStore.getBuildingGreening(bldg.id)"
+                value="Installed"
+                severity="success"
+                class="ml-auto text-xs py-0 px-1"
+              />
+            </div>
+          </AccordionHeader>
+          <AccordionContent>
+            <EcologyBuildingModule
+              :building="bldg"
+              :exactPerimeterM="exactPerimeterM"
+            />
+          </AccordionContent>
+        </AccordionPanel>
 
-      <!-- Ecology Module: Singapore-style vertical greening -->
-      <EcologyBuildingModule
-        v-else-if="mapStore.colorMode === 'ecology'"
-        :building="bldg"
-      />
+        <!-- Tab 3: Rooftop Rainwater Toren -->
+        <AccordionPanel value="hydrology">
+          <AccordionHeader>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-box text-sky-400 text-xs"></i>
+              <span class="text-xs font-semibold">Rooftop Rainwater Toren</span>
+              <Tag
+                v-if="existingToren"
+                value="Installed"
+                severity="info"
+                class="ml-auto text-xs py-0 px-1"
+              />
+            </div>
+          </AccordionHeader>
+          <AccordionContent>
+            <HydrologyBuildingModule
+              :building="bldg"
+              :availableRoofM2="availableRoofForToren"
+            />
+          </AccordionContent>
+        </AccordionPanel>
 
-      <!-- Hydrology Module: Rooftop Toren with multiple capacities -->
-      <HydrologyBuildingModule
-        v-else-if="mapStore.colorMode === 'hydrology'"
-        :building="bldg"
-      />
-
-      <!-- Default Mode: Quick Jump Buttons -->
-      <div v-else class="flex flex-column gap-2">
-        <span class="text-xs text-slate-400 mb-1">Select a module to simulate interventions:</span>
-        <div class="flex gap-2">
-          <Button
-            label="Solar PV"
-            icon="pi pi-sun"
-            size="small"
-            severity="warning"
-            outlined
-            class="flex-1"
-            @click="mapStore.setColorMode('energy')"
-          />
-          <Button
-            label="Green Wall"
-            icon="pi pi-leaf"
-            size="small"
-            severity="success"
-            outlined
-            class="flex-1"
-            @click="mapStore.setColorMode('ecology')"
-          />
-          <Button
-            label="Toren"
-            icon="pi pi-box"
-            size="small"
-            severity="info"
-            outlined
-            class="flex-1"
-            @click="mapStore.setColorMode('hydrology')"
-          />
-        </div>
-      </div>
+      </Accordion>
     </div>
   </div>
 </template>
@@ -299,19 +436,20 @@ function closeCard() {
   position: absolute;
   top: 68px;
   right: 12px;
-  width: 345px;
+  width: 375px;
+  max-width: calc(100vw - 24px);
   max-height: calc(100vh - 84px);
   overflow-y: auto;
-  background: rgba(15, 23, 42, 0.94);
+  background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 12px;
-  padding: 16px;
+  padding: 14px;
   z-index: 1000;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   animation: slideIn 0.2s ease-out;
 }
 
@@ -333,7 +471,7 @@ function closeCard() {
 }
 
 .building-name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #f8fafc;
   margin: 0;
@@ -341,40 +479,29 @@ function closeCard() {
 }
 
 .building-sub {
-  font-size: 11px;
+  font-size: 10.5px;
   color: #94a3b8;
   display: block;
   margin-top: 2px;
-}
-
-.lod-tag {
-  font-size: 10px;
-  font-weight: 700;
-  color: #94a3b8;
-  background: rgba(148, 163, 184, 0.12);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  padding: 2px 6px;
-  border-radius: 4px;
 }
 
 .stat-chips-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 4px;
 }
 
 .stat-chip {
-  background: rgba(30, 41, 59, 0.6);
+  background: rgba(30, 41, 59, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.12);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   display: flex;
   flex-direction: column;
 }
 
 .chip-label {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
@@ -382,23 +509,85 @@ function closeCard() {
 }
 
 .chip-value {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: #f1f5f9;
   margin-top: 2px;
 }
 
+.roof-budget-card {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.budget-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.segmented-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.bar-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.bar-solar {
+  background: #f59e0b;
+}
+
+.bar-toren {
+  background: #0284c7;
+}
+
+.bar-unallocated {
+  background: #475569;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-solar {
+  background: #f59e0b;
+}
+
+.dot-toren {
+  background: #0284c7;
+}
+
+.dot-avail {
+  background: #64748b;
+}
+
 .metrics-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .metric-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 11.5px;
 }
 
 .metric-label {
@@ -412,48 +601,30 @@ function closeCard() {
   font-weight: 500;
 }
 
-.potential-section {
+.interventions-accordion-section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
-.potential-title {
+.section-title-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.section-heading {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.section-subheading {
+  font-size: 9.5px;
   color: #64748b;
 }
 
-.gradient-progress-bar {
-  height: 8px;
-  border-radius: 4px;
-  position: relative;
-  overflow: visible;
-  transition: background 0.3s ease;
-}
-
-.progress-marker {
-  position: absolute;
-  top: -3px;
-  width: 4px;
-  height: 14px;
-  background: #ffffff;
-  border-radius: 2px;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
-  transform: translateX(-50%);
-  transition: left 0.3s ease;
-}
-
-.potential-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 9px;
-  color: #64748b;
-}
-
-.interactive-section {
-  margin-top: 2px;
+.building-accordions :deep(.p-accordioncontent-content) {
+  padding: 8px 8px !important;
 }
 </style>

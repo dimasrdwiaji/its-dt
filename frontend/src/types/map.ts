@@ -8,3 +8,17 @@ export interface MeasurePoint {
   lng: number
   lat: number
 }
+
+export interface RasterLayerInfo {
+  id: string
+  name: string
+  module: 'energy' | 'ecology' | 'hydrology'
+  unit: string
+  colormap: string
+  min_label: string
+  max_label: string
+  derivation: string
+  bounds: [number, number, number, number]
+  opacity?: number
+  visible?: boolean
+}

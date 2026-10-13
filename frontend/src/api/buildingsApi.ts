@@ -13,6 +13,11 @@ export async function fetchCatalog(): Promise<any> {
   return response.data
 }
 
+export async function fetchRasters(): Promise<any[]> {
+  const response = await axios.get(`${API_BASE}/rasters`)
+  return response.data
+}
+
 export interface EcologyPredictionResult {
   baseline_lst_c: number
   new_lst_c: number

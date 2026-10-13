@@ -30,7 +30,7 @@ const mapStore = useMapStore()
     <BuildingInfoCard v-if="mapStore.selectedBuilding" />
 
     <!-- Dynamic Legend Panel -->
-    <LegendPanel v-if="mapStore.showLegend && mapStore.colorMode !== 'none'" />
+    <LegendPanel v-if="mapStore.showLegend" />
 
     <!-- Tree Planting Prediction Impact Card -->
     <PredictionCard />

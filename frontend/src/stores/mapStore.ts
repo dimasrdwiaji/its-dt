@@ -1,15 +1,15 @@
 import { defineStore } from 'pinia'
 import type { ColorMode, BaseMapStyle, ActiveTool, BuildingProperties, BuildingFeatureCollection } from '@/types'
-import { fetchBuildings, fetchCatalog } from '@/api/buildingsApi'
+import { fetchBuildings, fetchCatalog, fetchRasters } from '@/api/buildingsApi'
 import * as turf from '@turf/turf'
 
 export const useMapStore = defineStore('map', {
   state: () => ({
-    colorMode: 'energy' as ColorMode,
+    colorMode: 'none' as ColorMode,
     baseMapStyle: 'dark' as BaseMapStyle,
     selectedBuilding: null as BuildingProperties | null,
     activeTool: 'info' as ActiveTool,
-    showContent: false,
+    showContent: true,
     showLegend: true,
     measurePoints: [] as [number, number][],
     measureDistanceMeters: null as number | null,
@@ -18,6 +18,8 @@ export const useMapStore = defineStore('map', {
     },
     buildingData: null as BuildingFeatureCollection | null,
     catalog: null as any,
+    rasterLayers: [] as any[],
+    activeRasters: {} as Record<string, { visible: boolean; opacity: number }>,
     selectedTreeSpecies: 'tree_trembesi' as string,
     latestPrediction: null as any,
     pondPoints: [] as [number, number][],
@@ -120,15 +122,33 @@ export const useMapStore = defineStore('map', {
       this.measureDistanceMeters = null
     },
 
+    toggleRaster(id: string) {
+      if (!this.activeRasters[id]) {
+        this.activeRasters[id] = { visible: true, opacity: 0.8 }
+      } else {
+        this.activeRasters[id].visible = !this.activeRasters[id].visible
+      }
+    },
+
+    setRasterOpacity(id: string, opacity: number) {
+      if (!this.activeRasters[id]) {
+        this.activeRasters[id] = { visible: true, opacity }
+      } else {
+        this.activeRasters[id].opacity = opacity
+      }
+    },
+
     async initData() {
       this.loading = true
       try {
-        const [buildings, catalog] = await Promise.all([
+        const [buildings, catalog, rasters] = await Promise.all([
           fetchBuildings(),
-          fetchCatalog().catch(() => null)
+          fetchCatalog().catch(() => null),
+          fetchRasters().catch(() => [])
         ])
         this.buildingData = buildings
         this.catalog = catalog
+        this.rasterLayers = rasters || []
       } catch (err: any) {
         this.error = err.message || 'Failed to load digital twin data'
         console.error(err)

@@ -203,6 +203,7 @@ onMounted(async () => {
       mapStore.measurePoints.length,
       mapStore.pondPoints.length,
       mapStore.tree3DModel,
+      mapStore.activeRasters,
       scenarioStore.interventions.length
     ],
     () => {

@@ -1,4 +1,4 @@
-import { GeoJsonLayer, ColumnLayer, PolygonLayer } from '@deck.gl/layers'
+import { GeoJsonLayer, ColumnLayer, PolygonLayer, BitmapLayer } from '@deck.gl/layers'
 import { ScenegraphLayer } from '@deck.gl/mesh-layers'
 import { GLTFLoader } from '@loaders.gl/gltf'
 import { getBuildingColor, COBALT_HIGHLIGHT } from '@/constants/colorRamps'
@@ -10,6 +10,22 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
 
   function getLayers() {
     const layers: any[] = []
+
+    // 0. Active GeoTIFF Raster Overlays
+    for (const r of store.rasterLayers) {
+      const activeCfg = store.activeRasters[r.id]
+      if (activeCfg?.visible) {
+        layers.push(
+          new BitmapLayer({
+            id: `raster-${r.id}`,
+            image: `http://localhost:8000/api/rasters/${r.id}/image`,
+            bounds: r.bounds,
+            opacity: activeCfg.opacity ?? 0.8,
+            pickable: false
+          })
+        )
+      }
+    }
 
     // 1. Campus Buildings LoD1 Extruded Layer
     if (store.layersVisibility.buildings && store.buildingData?.features?.length) {

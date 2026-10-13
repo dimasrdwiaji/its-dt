@@ -13,8 +13,8 @@ const props = withDefaults(
   {
     icon: 'pi pi-bolt',
     color: '#3b82f6',
-    size: 74,
-    strokeWidth: 6
+    size: 66,
+    strokeWidth: 5
   }
 )
 
