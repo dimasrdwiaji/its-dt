@@ -18,7 +18,7 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
         layers.push(
           new BitmapLayer({
             id: `raster-${r.id}`,
-            image: `http://localhost:8000/api/rasters/${r.id}/image`,
+            image: r.static_image || `/data/rasters/${r.id}.png`,
             bounds: r.bounds,
             opacity: activeCfg.opacity ?? 0.8,
             pickable: false
@@ -61,6 +61,12 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
               return [16, 110, 60, 245] // Deep foliage green
             }
 
+            // Hydrology back-coupling: dynamically tint building based on mitigated overland runoff
+            if (store.colorMode === 'hydrology') {
+              const hydro = scenarioStore.getBuildingEffectiveHydrology(f.properties?.id, f.properties)
+              return getBuildingColor({ ...f.properties, adjacent_flood_risk_m3: hydro.effectiveAdjacentFlowM3 }, 'hydrology')
+            }
+
             // Normal thematic ramp
             return getBuildingColor(f.properties, store.colorMode)
           },
@@ -87,8 +93,8 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
           },
           lineWidthMinPixels: 1,
           updateTriggers: {
-            getFillColor: [store.colorMode, store.selectedBuilding?.id, scenarioStore.interventions.length],
-            getLineColor: [store.colorMode, store.selectedBuilding?.id, scenarioStore.interventions.length]
+            getFillColor: [store.colorMode, store.selectedBuilding?.id, scenarioStore.interventions.length, scenarioStore.totalStorageAddedM3],
+            getLineColor: [store.colorMode, store.selectedBuilding?.id, scenarioStore.interventions.length, scenarioStore.totalStorageAddedM3]
           },
           onClick: (info: any) => {
             if (store.activeTool === 'info') {
@@ -198,6 +204,25 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
     // 3. Ground Interventions: Modular Dry Wells (Sumur Resapan)
     const dryWells = scenarioStore.getDryWells
     if (dryWells.length > 0) {
+      // 3a. Infiltration Catchment Zone (Radius: 45m)
+      layers.push(
+        new ColumnLayer({
+          id: 'dry-wells-catchment',
+          data: dryWells,
+          diskResolution: 36,
+          radius: 45,
+          extruded: false,
+          elevation: 0.1,
+          getPosition: (d: any) => d.coordinates,
+          getFillColor: [14, 165, 233, 25], // Subtle sky wash
+          getLineColor: [14, 165, 233, 100],
+          lineWidthMinPixels: 1.5,
+          stroked: true,
+          filled: true,
+          pickable: false
+        })
+      )
+
       // Outer Casing Ring
       layers.push(
         new ColumnLayer({
@@ -241,6 +266,42 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
     // 4. Ground Interventions: Completed Retention Ponds (Kolam Retensi)
     const ponds = scenarioStore.getRetentionPonds
     if (ponds.length > 0) {
+      // 4a. Catchment Area of Influence (Radius: 120m)
+      const pondCentroids = ponds
+        .map((p) => {
+          let center = [0, 0]
+          if (p.coordinates && p.coordinates.length >= 2) {
+            center = p.coordinates
+          } else if (p.polygon && p.polygon.length > 0) {
+            center = [
+              p.polygon.reduce((sum: number, pt: number[]) => sum + pt[0], 0) / p.polygon.length,
+              p.polygon.reduce((sum: number, pt: number[]) => sum + pt[1], 0) / p.polygon.length
+            ]
+          }
+          return { ...p, center }
+        })
+        .filter((p) => p.center[0] !== 0)
+
+      if (pondCentroids.length > 0) {
+        layers.push(
+          new ColumnLayer({
+            id: 'ponds-catchment',
+            data: pondCentroids,
+            diskResolution: 48,
+            radius: 120,
+            extruded: false,
+            elevation: 0.1,
+            getPosition: (d: any) => d.center,
+            getFillColor: [6, 182, 212, 20], // Delicate cyan wash
+            getLineColor: [6, 182, 212, 90],
+            lineWidthMinPixels: 1.5,
+            stroked: true,
+            filled: true,
+            pickable: false
+          })
+        )
+      }
+
       layers.push(
         new PolygonLayer({
           id: 'retention-ponds',

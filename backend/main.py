@@ -1,13 +1,34 @@
 import os
-os.environ['PROJ_LIB'] = r'C:\Users\Dimas RD\miniconda3\envs\geo_env\Library\share\proj'
-os.environ['GDAL_DATA'] = r'C:\Users\Dimas RD\miniconda3\envs\geo_env\Library\share\gdal'
-os.environ['PATH'] = r'C:\Users\Dimas RD\miniconda3\envs\geo_env\Library\bin;' + os.environ.get('PATH', '')
+import sys
 
-try:
-    import pyproj
-    pyproj.datadir.set_data_dir(r'C:\Users\Dimas RD\miniconda3\envs\geo_env\Library\share\proj')
-except Exception:
-    pass
+# Configure Proj and GDAL paths portably across environments (Conda, venv, or system)
+conda_prefix = os.environ.get("CONDA_PREFIX") or os.environ.get("VIRTUAL_ENV")
+fallback_conda = r"C:\Users\Dimas RD\miniconda3\envs\geo_env"
+target_prefix = conda_prefix if (conda_prefix and os.path.exists(conda_prefix)) else fallback_conda
+
+if target_prefix and os.path.exists(target_prefix):
+    is_win = os.name == 'nt'
+    lib_bin = os.path.join(target_prefix, "Library", "bin") if is_win else os.path.join(target_prefix, "bin")
+    proj_share = os.path.join(target_prefix, "Library", "share", "proj") if is_win else os.path.join(target_prefix, "share", "proj")
+    gdal_share = os.path.join(target_prefix, "Library", "share", "gdal") if is_win else os.path.join(target_prefix, "share", "gdal")
+
+    if os.path.exists(lib_bin) and lib_bin not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = lib_bin + os.pathsep + os.environ.get("PATH", "")
+        if hasattr(os, "add_dll_directory"):
+            try:
+                os.add_dll_directory(lib_bin)
+            except Exception:
+                pass
+    if os.path.exists(proj_share):
+        os.environ["PROJ_LIB"] = proj_share
+        os.environ["PROJ_DATA"] = proj_share
+        try:
+            import pyproj
+            pyproj.datadir.set_data_dir(proj_share)
+        except Exception:
+            pass
+    if os.path.exists(gdal_share):
+        os.environ["GDAL_DATA"] = gdal_share
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

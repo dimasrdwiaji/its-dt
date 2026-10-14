@@ -7,15 +7,19 @@ import { useScenarioStore } from '@/stores/scenarioStore'
 import { useDeckLayers } from '@/composables/useDeckLayers'
 import { MAP_STYLES } from '@/constants/mapStyles'
 import { predictEcology } from '@/api/buildingsApi'
-import tokenData from '@/token.json'
+import { getMapboxToken, saveUserMapboxToken } from '@/utils/token'
 import * as turf from '@turf/turf'
 import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
 
 const mapContainer = ref<HTMLDivElement | null>(null)
 const mapStore = useMapStore()
 const scenarioStore = useScenarioStore()
 const { getLayers } = useDeckLayers(mapStore)
 const plantingLoading = ref(false)
+
+const showTokenModal = ref(false)
+const inputToken = ref('')
 
 let map: mapboxgl.Map | null = null
 let deckOverlay: MapboxOverlay | null = null
@@ -40,15 +44,16 @@ function finalizePond() {
   updateDeckOverlay()
 }
 
-onMounted(async () => {
-  if (!mapContainer.value) return
-
-  // Ensure token is loaded
-  const token = tokenData.mapbox || (tokenData as any).token
-  if (!token) {
-    console.error('Mapbox access token is missing from token.json!')
-    return
+function submitToken() {
+  if (inputToken.value.trim()) {
+    saveUserMapboxToken(inputToken.value.trim())
+    showTokenModal.value = false
+    initMap(inputToken.value.trim())
   }
+}
+
+function initMap(token: string) {
+  if (!mapContainer.value) return
   mapboxgl.accessToken = token
 
   // Fetch building data in parallel with map init
@@ -224,6 +229,15 @@ onMounted(async () => {
       }
     }
   )
+}
+
+onMounted(() => {
+  const token = getMapboxToken()
+  if (!token) {
+    showTokenModal.value = true
+  } else {
+    initMap(token)
+  }
 })
 
 onUnmounted(() => {
@@ -310,6 +324,35 @@ onUnmounted(() => {
         />
       </div>
     </div>
+
+    <!-- Token Injection Modal (displayed if no Mapbox token found in environment) -->
+    <div v-if="showTokenModal" class="token-modal-overlay">
+      <div class="token-modal-card">
+        <div class="flex align-items-center gap-2 mb-2">
+          <i class="pi pi-key text-cyan-400"></i>
+          <span class="font-bold text-sm text-slate-100">Mapbox Access Token Required</span>
+        </div>
+        <p class="text-xs text-slate-300 mb-3 line-height-3">
+          To render the satellite basemap and campus 3D terrain, please provide your Mapbox public access token (<code class="text-sky-300">pk.eyJ1...</code>). It will be stored securely in your browser's local storage.
+        </p>
+        <div class="flex flex-column gap-2">
+          <InputText
+            v-model="inputToken"
+            placeholder="pk.eyJ1I..."
+            class="w-full text-xs"
+            @keyup.enter="submitToken"
+          />
+          <Button
+            label="Save Token & Launch Digital Twin"
+            icon="pi pi-check"
+            size="small"
+            class="w-full"
+            :disabled="!inputToken.trim()"
+            @click="submitToken"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -326,6 +369,30 @@ onUnmounted(() => {
 .mapbox-container {
   width: 100%;
   height: 100%;
+}
+
+.token-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.token-modal-card {
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  background: rgba(30, 41, 59, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
 .measure-pill,

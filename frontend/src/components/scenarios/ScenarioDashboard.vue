@@ -76,6 +76,34 @@ function getModuleIcon(mod: string) {
         </div>
       </div>
 
+      <!-- Campus Hydrology & Flood Resilience Impact -->
+      <div v-if="scenarioStore.campusHydrologyImpact.totalRetainedM3 > 0" class="hydro-resilience-box">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-shield text-sky-400 text-xs"></i>
+            <span class="text-xs font-bold text-slate-200 tracking-wide uppercase">Campus Flood Mitigation</span>
+          </div>
+          <Tag :value="`${scenarioStore.campusHydrologyImpact.campusRetentionRatePct}% Storm Runoff Retained`" severity="info" size="small" />
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+          <div class="hydro-subcard">
+            <span class="text-slate-400 block text-[10px]">Rooftop Toren</span>
+            <span class="text-sky-300 font-bold">{{ scenarioStore.campusHydrologyImpact.torenTotalM3 }} m³</span>
+            <span class="text-[10px] text-slate-400 block">({{ scenarioStore.campusHydrologyImpact.activeTorenBuildingsCount }} bldgs)</span>
+          </div>
+          <div class="hydro-subcard">
+            <span class="text-slate-400 block text-[10px]">Dry Wells (45m)</span>
+            <span class="text-sky-300 font-bold">{{ scenarioStore.campusHydrologyImpact.dryWellsTotalM3 }} m³</span>
+            <span class="text-[10px] text-slate-400 block">infiltration</span>
+          </div>
+          <div class="hydro-subcard">
+            <span class="text-slate-400 block text-[10px]">Ponds (120m)</span>
+            <span class="text-sky-300 font-bold">{{ scenarioStore.campusHydrologyImpact.pondsTotalM3 }} m³</span>
+            <span class="text-[10px] text-slate-400 block">detention</span>
+          </div>
+        </div>
+      </div>
+
       <Divider class="my-2" />
 
       <!-- Interventions List -->
@@ -230,6 +258,20 @@ function getModuleIcon(mod: string) {
   font-size: 15px;
   font-weight: 700;
   margin-top: 4px;
+}
+
+.hydro-resilience-box {
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.hydro-subcard {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 6px;
+  padding: 6px;
 }
 
 .interventions-section {

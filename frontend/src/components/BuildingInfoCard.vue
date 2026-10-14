@@ -146,13 +146,27 @@ const runoffVolume = computed(() => {
   return Number(bldg.value.roof_runoff_vol_m3).toFixed(1)
 })
 
-const floodRisk = computed(() => {
-  if (!bldg.value) return 'Low'
-  return bldg.value.flood_risk_level || 'Low'
+const effectiveHydrology = computed(() => {
+  if (!bldg.value) {
+    return {
+      baselineRoofRunoffM3: 0,
+      netRoofRunoffM3: 0,
+      roofRetentionPct: 0,
+      torenStorageM3: 0,
+      groundReliefM3: 0,
+      baselineAdjacentFlowM3: 0,
+      effectiveAdjacentFlowM3: 0,
+      baselineLevel: 'Low',
+      effectiveLevel: 'Low',
+      isDowngraded: false,
+      isMitigated: false
+    }
+  }
+  return scenarioStore.getBuildingEffectiveHydrology(bldg.value.id, bldg.value)
 })
 
-const floodSeverity = computed(() => {
-  switch (floodRisk.value) {
+const effectiveFloodSeverity = computed(() => {
+  switch (effectiveHydrology.value.effectiveLevel) {
     case 'Critical': return 'danger'
     case 'High': return 'warn'
     case 'Medium': return 'info'
@@ -315,17 +329,27 @@ function closeCard() {
           Storm Roof Runoff
           <FormulaTooltip
             title="Peak Storm Roof Runoff Volume"
-            plainWords="Total volume of rainwater discharging off the roof during a 2-hour design storm computed using the standard Rational Hydrologic Method."
-            formula="Q = C × I × A_roof  (m³)"
+            plainWords="Total volume of rainwater discharging off the roof during a 2-hour design storm computed using the standard Rational Hydrologic Method, net of rooftop toren rainwater harvesting."
+            formula="Q_net = max(0, C × I × A_roof - V_toren)  (m³)"
             :variables="[
               { name: 'Runoff Coef C', value: '0.90 (Impervious Concrete/Metal)' },
               { name: 'Rainfall Intensity I', value: '120 mm (0.12 m, Surabaya 10-yr storm)' },
-              { name: 'Roof Area', value: `${roofAreaM2} m²` }
+              { name: 'Roof Area', value: `${roofAreaM2} m²` },
+              { name: 'Toren Retention', value: `${effectiveHydrology.torenStorageM3} m³` }
             ]"
             standard="Rational Method (SNI 2415:2016 Hydrologic Flood Calculation)"
           />
         </span>
-        <span class="metric-value">{{ runoffVolume }} m³</span>
+        <span class="metric-value">
+          <template v-if="effectiveHydrology.roofRetentionPct > 0">
+            <span class="text-xs text-slate-400 line-through mr-1">{{ runoffVolume }}</span>
+            <span class="text-emerald-400 font-bold">{{ effectiveHydrology.netRoofRunoffM3 }} m³</span>
+            <span class="text-[10px] text-emerald-400 ml-1">(-{{ effectiveHydrology.roofRetentionPct }}%)</span>
+          </template>
+          <template v-else>
+            {{ runoffVolume }} m³
+          </template>
+        </span>
       </div>
 
       <div class="metric-row">
@@ -334,18 +358,30 @@ function closeCard() {
           Adjacent Flood Risk
           <FormulaTooltip
             title="Adjacent Flood Vulnerability Rating"
-            plainWords="Flooding vulnerability determined by the maximum surface water ponding depth within depressions directly adjacent to the building perimeter."
-            formula="Risk Level = f(Max Depression Pooling Depth)"
+            plainWords="Flooding vulnerability determined by overland flow ponding directly adjacent to the building perimeter, dynamically mitigated by toren retention and nearby dry wells (45m radius) or retention ponds (120m radius)."
+            formula="Risk Level = f(Baseline Hazard Flow - Ground Infiltration Relief - Toren Retention)"
             :variables="[
-              { name: 'Low Risk', value: '< 0.10 m' },
-              { name: 'Medium Risk', value: '0.10 - 0.30 m' },
-              { name: 'High Risk', value: '0.30 - 0.60 m' },
-              { name: 'Critical Risk', value: '> 0.60 m' }
+              { name: 'Baseline Level', value: effectiveHydrology.baselineLevel },
+              { name: 'Ground Infiltration Relief', value: `${effectiveHydrology.groundReliefM3} m³` },
+              { name: 'Net Effective Flow', value: `${effectiveHydrology.effectiveAdjacentFlowM3} m³` }
             ]"
             source="DEMNAS Pit-Filled Flow Accumulation & Pooling Depth"
           />
         </span>
-        <Tag :value="floodRisk" :severity="floodSeverity" size="small" />
+        <div class="flex items-center gap-1">
+          <Tag
+            v-if="effectiveHydrology.isDowngraded"
+            :value="`${effectiveHydrology.baselineLevel} → ${effectiveHydrology.effectiveLevel}`"
+            severity="success"
+            size="small"
+          />
+          <Tag
+            v-else
+            :value="effectiveHydrology.effectiveLevel"
+            :severity="effectiveFloodSeverity"
+            size="small"
+          />
+        </div>
       </div>
     </div>
 
