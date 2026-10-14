@@ -259,3 +259,10 @@ data/sebe/Energyyearwall.txt
 data/sebe/sky_irradiance_distribution.txt
 data/energy_analysis_summary.txt
 cache/
+
+# Others
+cache/
+.git/
+
+# Tokens
+token.json
