@@ -220,10 +220,45 @@ __marimo__/
 # Literature
 literature/
 
-# Large files
+# Build & Dist
+dist/
+frontend/dist/
+*.tsbuildinfo
+
+# Secrets & Local Environment Configs
+token.json
+**/token.json
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+
+# GIS Auxiliary & Project Cache Files
+*.aux.xml
+*.qgz
+*.gpkg
+
+# Large Raw / Derived GIS Data Files
 data/DEMNAS_1608-42_v1.0.tif
 data/ETH_GlobalCanopyHeight_10m_2020_S09E111_Map.tif
 data/ETH_GlobalCanopyHeight_10m_2020_S09E111_Map_SD.tif
+data/flat_dsm.tif
+data/flat_waspect.tif
+data/flat_wheight.tif
+data/time_in_daylight.tif
+data/l_shade_annual.tif
+data/*_aligned.tif
+data/synthetic_dsm_*.tif
+data/*.parquet
+data/buildings_dt_master.geojson
+data/lod1.geojson
+data/lod1_gba_sby.geojson
+data/plots/
+data/sebe/Energyyearwall.txt
+data/sebe/sky_irradiance_distribution.txt
+data/energy_analysis_summary.txt
+cache/
 
 # Others
 cache/

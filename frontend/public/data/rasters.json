@@ -1,0 +1,104 @@
+[
+  {
+    "id": "solar_irradiance",
+    "name": "Annual Solar Irradiance (GHI)",
+    "module": "energy",
+    "unit": "kWh/m\u00b2/yr",
+    "colormap": "YlOrRd",
+    "min_label": "Low (800)",
+    "max_label": "High (1,850+)",
+    "derivation": "Simulated via Solar Energy on Building Envelopes (SEBE) model using Surabaya global horizontal irradiance (GHI) and 2m Combined DSM accounting for multi-building roof slope, aspect, and mutual shadowing.",
+    "bounds": [
+      112.789271,
+      -7.290672,
+      112.80143,
+      -7.274425
+    ],
+    "static_image": "/data/rasters/solar_irradiance.png"
+  },
+  {
+    "id": "daylight_duration",
+    "name": "Annual Daylight Duration",
+    "module": "energy",
+    "unit": "Hours/yr",
+    "colormap": "cividis",
+    "min_label": "Shaded (<1,200 hrs)",
+    "max_label": "Clear (3,800+ hrs)",
+    "derivation": "Computed using sun position ray-tracing across 365 days on the 2m Digital Surface Model (DSM), tracking unobstructed direct line-of-sight daylight hours.",
+    "bounds": [
+      112.789271,
+      -7.290672,
+      112.80143,
+      -7.274425
+    ],
+    "static_image": "/data/rasters/daylight_duration.png"
+  },
+  {
+    "id": "lst_temperature",
+    "name": "Land Surface Temperature (LST)",
+    "module": "ecology",
+    "unit": "\u00b0C",
+    "colormap": "magma",
+    "min_label": "Cool (30\u00b0C)",
+    "max_label": "Hot (52\u00b0C)",
+    "derivation": "Derived from Landsat 8 TIRS Band 10 and Sentinel-2 MSI surface reflectance composite (Oct 2023) using the Radiative Transfer Equation (RTE) and Split-Window algorithm calibrated against urban weather stations.",
+    "bounds": [
+      112.789323,
+      -7.290637,
+      112.80136,
+      -7.274467
+    ],
+    "static_image": "/data/rasters/lst_temperature.png"
+  },
+  {
+    "id": "canopy_height",
+    "name": "Canopy Height Model (CHM)",
+    "module": "ecology",
+    "unit": "Meters",
+    "colormap": "YlGn",
+    "min_label": "Ground (0 m)",
+    "max_label": "Tall Trees (20+ m)",
+    "derivation": "Extracted by subtracting high-resolution DEMNAS terrain elevation from the ETH Global Canopy Height 10m GEDI-calibrated surface model.",
+    "bounds": [
+      112.789271,
+      -7.290672,
+      112.80143,
+      -7.274425
+    ],
+    "static_image": "/data/rasters/canopy_height.png"
+  },
+  {
+    "id": "flow_accumulation",
+    "name": "Surface Flow Accumulation",
+    "module": "hydrology",
+    "unit": "Accumulated Cells",
+    "colormap": "PuBu",
+    "min_label": "Ridge / Crest",
+    "max_label": "Major Drainage Channel",
+    "derivation": "Calculated via D8 deterministic flow routing algorithm on pit-filled DEMNAS (8.27m), identifying surface runoff convergence channels and natural drainage pathways.",
+    "bounds": [
+      112.789271,
+      -7.290672,
+      112.80143,
+      -7.274425
+    ],
+    "static_image": "/data/rasters/flow_accumulation.png"
+  },
+  {
+    "id": "pooling_depth",
+    "name": "Storm Ponding / Pooling Depth",
+    "module": "hydrology",
+    "unit": "Meters",
+    "colormap": "Blues",
+    "min_label": "Dry (0.0 m)",
+    "max_label": "Deep Pooling (1.2+ m)",
+    "derivation": "Derived by subtracting the raw topographic DEM from the depression-filled hydrologic DEM, highlighting micro-topographic flood basins prone to water accumulation during heavy rainfall.",
+    "bounds": [
+      112.789271,
+      -7.290672,
+      112.80143,
+      -7.274425
+    ],
+    "static_image": "/data/rasters/pooling_depth.png"
+  }
+]
