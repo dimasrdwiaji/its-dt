@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useScenarioStore } from '@/stores/scenarioStore'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import Divider from 'primevue/divider'
+import FinancialLifecycleChart from './FinancialLifecycleChart.vue'
+import ScenarioComparisonModal from './ScenarioComparisonModal.vue'
 
 const scenarioStore = useScenarioStore()
+const showComparisonModal = ref(false)
 
 function getModuleSeverity(mod: string) {
   switch (mod) {
@@ -37,13 +41,23 @@ function getModuleIcon(mod: string) {
             <span class="drawer-subtitle">Cumulative Planning & Impact Analysis</span>
           </div>
         </div>
-        <Button
-          icon="pi pi-times"
-          text
-          rounded
-          size="small"
-          @click="scenarioStore.closeDashboard()"
-        />
+        <div class="flex items-center gap-1">
+          <Button
+            icon="pi pi-sliders-v"
+            label="Compare Mixes"
+            size="small"
+            outlined
+            class="text-xs py-1"
+            @click="showComparisonModal = true"
+          />
+          <Button
+            icon="pi pi-times"
+            text
+            rounded
+            size="small"
+            @click="scenarioStore.closeDashboard()"
+          />
+        </div>
       </div>
 
       <!-- Key Impact KPI Cards -->
@@ -103,6 +117,9 @@ function getModuleIcon(mod: string) {
           </div>
         </div>
       </div>
+
+      <!-- 25-Year Financial Lifecycle Economics Chart -->
+      <FinancialLifecycleChart v-if="scenarioStore.totalCapExIdr > 0" class="mb-2" />
 
       <Divider class="my-2" />
 
@@ -175,6 +192,12 @@ function getModuleIcon(mod: string) {
       </div>
     </div>
   </div>
+
+  <!-- Scenario Comparison Modal -->
+  <ScenarioComparisonModal
+    :visible="showComparisonModal"
+    @close="showComparisonModal = false"
+  />
 </template>
 
 <style scoped>

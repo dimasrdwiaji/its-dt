@@ -72,7 +72,7 @@ function closeCard() {
 .prediction-card {
   position: absolute;
   top: 72px;
-  left: 16px;
+  left: 360px; /* Offset right of ContentPanel */
   width: 330px;
   background: rgba(15, 23, 42, 0.94);
   backdrop-filter: blur(14px);

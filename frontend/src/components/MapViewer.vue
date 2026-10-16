@@ -8,6 +8,7 @@ import { useDeckLayers } from '@/composables/useDeckLayers'
 import { MAP_STYLES } from '@/constants/mapStyles'
 import { predictEcology } from '@/api/buildingsApi'
 import { getMapboxToken, saveUserMapboxToken } from '@/utils/token'
+import { snapPointToRoad } from '@/utils/roadSnapping'
 import * as turf from '@turf/turf'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -77,8 +78,8 @@ function initMap(token: string) {
     return
   }
 
-  // Add navigation controls
-  map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'bottom-left')
+  // Add navigation controls (placed at top-right below toolbar to avoid ContentPanel occlusion)
+  map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right')
 
   // Initialize deck.gl MapboxOverlay
   deckOverlay = new MapboxOverlay({
@@ -114,7 +115,20 @@ function initMap(token: string) {
     } else if (mapStore.activeTool === 'plant_tree') {
       plantingLoading.value = true
       try {
-        const result = await predictEcology(e.lngLat.lat, e.lngLat.lng, mapStore.selectedTreeSpecies)
+        let plantLng = e.lngLat.lng
+        let plantLat = e.lngLat.lat
+        let snapDetails: any = null
+
+        if (mapStore.snapToRoad && mapStore.roadData?.features?.length) {
+          const snapRes = snapPointToRoad(e.lngLat.lng, e.lngLat.lat, mapStore.roadData.features, 20.0)
+          if (snapRes.snapped) {
+            plantLng = snapRes.snappedCoord[0]
+            plantLat = snapRes.snappedCoord[1]
+            snapDetails = snapRes
+          }
+        }
+
+        const result = await predictEcology(plantLat, plantLng, mapStore.selectedTreeSpecies)
         
         scenarioStore.addIntervention({
           id: `tree_${Date.now()}`,
@@ -126,20 +140,22 @@ function initMap(token: string) {
           costIdr: result.cost_idr,
           co2OffsetKgYr: result.co2_mitigation_kg_yr,
           coolingDeltaC: result.delta_c,
-          coordinates: [e.lngLat.lng, e.lngLat.lat],
+          coordinates: [plantLng, plantLat],
           timestamp: Date.now(),
           metadata: {
             speciesId: mapStore.selectedTreeSpecies,
             baselineLst: result.baseline_lst_c,
             newLst: result.new_lst_c,
-            canopyRadiusM: result.canopy_radius_m
+            canopyRadiusM: result.canopy_radius_m,
+            snap: snapDetails
           }
         })
 
         mapStore.setLatestPrediction({
           ...result,
-          lat: e.lngLat.lat,
-          lon: e.lngLat.lng
+          lat: plantLat,
+          lon: plantLng,
+          snap: snapDetails
         })
 
         updateDeckOverlay()
@@ -204,6 +220,9 @@ function initMap(token: string) {
       mapStore.colorMode,
       mapStore.selectedBuilding,
       mapStore.layersVisibility.buildings,
+      mapStore.layersVisibility.roads,
+      mapStore.roadData,
+      mapStore.lowHangingFruitFilter,
       mapStore.buildingData,
       mapStore.measurePoints.length,
       mapStore.pondPoints.length,
@@ -226,6 +245,23 @@ function initMap(token: string) {
         map.once('style.load', () => {
           updateDeckOverlay()
         })
+      }
+    }
+  )
+
+  // Watch programmatic camera fly-to target (e.g. from Dashboard BOQ)
+  watch(
+    () => mapStore.cameraFlyToTarget,
+    (target) => {
+      if (map && target) {
+        map.flyTo({
+          center: [target.lng, target.lat],
+          zoom: target.zoom ?? 17.5,
+          pitch: target.pitch ?? 45,
+          essential: true,
+          duration: 1500
+        })
+        mapStore.clearFlyTo()
       }
     }
   )
@@ -432,5 +468,10 @@ onUnmounted(() => {
 .pond-pill {
   border: 1px solid rgba(6, 182, 212, 0.45);
   color: #67e8f9;
+}
+
+:deep(.mapboxgl-ctrl-top-right) {
+  top: 64px;
+  right: 16px;
 }
 </style>

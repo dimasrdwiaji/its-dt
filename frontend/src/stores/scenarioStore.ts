@@ -13,15 +13,33 @@ function computeDistanceM(lon1: number, lat1: number, lon2: number, lat2: number
 }
 
 function classifyFloodRisk(qM3: number, pondDepthM: number = 0): string {
-  if (qM3 >= 5000 || pondDepthM >= 0.5) return 'Critical'
-  if (qM3 >= 1000 || pondDepthM >= 0.25) return 'High'
-  if (qM3 >= 250 || pondDepthM >= 0.1) return 'Medium'
+  if (qM3 >= 50 || pondDepthM >= 0.5) return 'Critical'
+  if (qM3 >= 20 || pondDepthM >= 0.25) return 'High'
+  if (qM3 >= 5 || pondDepthM >= 0.1) return 'Medium'
   return 'Low'
+}
+
+function loadSavedInterventions(): InterventionItem[] {
+  try {
+    const raw = localStorage.getItem('its_dt_scenario_interventions')
+    if (raw) return JSON.parse(raw)
+  } catch (e) {
+    // ignore
+  }
+  return []
+}
+
+function persistInterventions(items: InterventionItem[]) {
+  try {
+    localStorage.setItem('its_dt_scenario_interventions', JSON.stringify(items))
+  } catch (e) {
+    // ignore
+  }
 }
 
 export const useScenarioStore = defineStore('scenario', {
   state: () => ({
-    interventions: [] as InterventionItem[],
+    interventions: loadSavedInterventions() as InterventionItem[],
     showDashboard: false
   }),
 
@@ -141,16 +159,28 @@ export const useScenarioStore = defineStore('scenario', {
 
       // Total overland flow reduction at perimeter buffer
       const baselineAdjacentFlowM3 = Number(buildingProps?.adjacent_flood_risk_m3) || 12.0
+      const baselinePondDepthM = Number(buildingProps?.adjacent_max_pond_depth_m) || 0
       const totalFlowReductionM3 = Number((torenStorageM3 + groundReliefM3).toFixed(2))
-      const effectiveAdjacentFlowM3 = Math.max(0, Number((baselineAdjacentFlowM3 - totalFlowReductionM3).toFixed(2)))
 
       // Risk Level Classification (matching DEMNAS flow routing thresholds)
-      const baselineLevel = buildingProps?.flood_risk_level || classifyFloodRisk(baselineAdjacentFlowM3)
-      const effectiveLevel = classifyFloodRisk(effectiveAdjacentFlowM3)
+      const baselineLevel = buildingProps?.flood_risk_level || classifyFloodRisk(baselineAdjacentFlowM3, baselinePondDepthM)
+      const hasRelief = totalFlowReductionM3 > 0
+
+      // If no intervention relief, effective strictly equals baseline!
+      const effectiveAdjacentFlowM3 = hasRelief
+        ? Math.max(0, Number((baselineAdjacentFlowM3 - totalFlowReductionM3).toFixed(2)))
+        : baselineAdjacentFlowM3
+
+      const reliefRatio = baselineAdjacentFlowM3 > 0 ? Math.min(1, totalFlowReductionM3 / baselineAdjacentFlowM3) : 0
+      const effectivePondDepthM = Math.max(0, Number((baselinePondDepthM * (1 - reliefRatio)).toFixed(2)))
+
+      const effectiveLevel = hasRelief
+        ? classifyFloodRisk(effectiveAdjacentFlowM3, effectivePondDepthM)
+        : baselineLevel
 
       const ranks: Record<string, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 }
-      const isDowngraded = (ranks[effectiveLevel] || 1) < (ranks[baselineLevel] || 1)
-      const isMitigated = isDowngraded || roofRetentionPct > 0
+      const isDowngraded = hasRelief && ((ranks[effectiveLevel] || 1) < (ranks[baselineLevel] || 1))
+      const isMitigated = hasRelief && (isDowngraded || roofRetentionPct > 0)
 
       return {
         baselineRoofRunoffM3: Number(baselineRoofRunoffM3.toFixed(1)),
@@ -163,8 +193,127 @@ export const useScenarioStore = defineStore('scenario', {
         baselineLevel,
         effectiveLevel,
         isDowngraded,
-        isMitigated
+        isMitigated,
+        hasRelief
       }
+    },
+
+    /**
+     * 25-Year Lifecycle Cost Analysis (LCC) under Permen ESDM No. 2 Tahun 2024
+     * Institutional daytime self-consumption (PLN B-3 tariff @ Rp 1,444.70/kWh)
+     * and voluntary carbon offsets (IDXCarbon @ Rp 69,600/ton)
+     */
+    financialLifecycle: (state) => {
+      const capexIdr = state.interventions.reduce((sum, item) => sum + item.costIdr, 0)
+      const year1SolarCleanEnergyKWh = state.interventions
+        .filter((i) => i.type === 'solar_rooftop')
+        .reduce((sum, i) => sum + (Number(i.energyMWhYr || i.cleanEnergyMWh) || 0) * 1000, 0)
+
+      const plnTariff = 1444.70 // Rp/kWh (PLN B-3 institutional tariff)
+      const carbonPrice = 69600.0 // Rp/ton CO2 (IDXCarbon)
+      const discountRate = 0.065 // 6.5% BI benchmark
+      const inflationRate = 0.03 // 3% inflation
+      const degradationRate = 0.0055 // 0.55% annual PV degradation
+      const annualOpexRatio = 0.012 // 1.2% initial CapEx annual O&M
+
+      let cumulativeCashFlow = -capexIdr
+      let cumulativeNpv = -capexIdr
+      const yearsData = []
+
+      for (let yr = 1; yr <= 25; yr++) {
+        const generationKWh = year1SolarCleanEnergyKWh * Math.pow(1 - degradationRate, yr - 1)
+        const billSavings = generationKWh * plnTariff
+        const co2Tons = (generationKWh * 0.79) / 1000
+        const carbonRevenue = co2Tons * carbonPrice
+
+        // Annual OpEx with inflation + inverter replacement at Year 12 (15% of CapEx)
+        let opex = capexIdr * annualOpexRatio * Math.pow(1 + inflationRate, yr - 1)
+        if (yr === 12 && year1SolarCleanEnergyKWh > 0) {
+          opex += capexIdr * 0.15
+        }
+
+        const netAnnualCashFlow = billSavings + carbonRevenue - opex
+        cumulativeCashFlow += netAnnualCashFlow
+
+        const discountedCashFlow = netAnnualCashFlow / Math.pow(1 + discountRate, yr)
+        cumulativeNpv += discountedCashFlow
+
+        yearsData.push({
+          year: yr,
+          generationKWh: Math.round(generationKWh),
+          billSavingsIdr: Math.round(billSavings),
+          carbonRevenueIdr: Math.round(carbonRevenue),
+          opexIdr: Math.round(opex),
+          netCashFlowIdr: Math.round(netAnnualCashFlow),
+          cumulativeCashFlowIdr: Math.round(cumulativeCashFlow),
+          npvIdr: Math.round(cumulativeNpv)
+        })
+      }
+
+      // Find breakeven year
+      const breakevenEntry = yearsData.find((d) => d.cumulativeCashFlowIdr >= 0)
+      const breakevenYear = breakevenEntry ? breakevenEntry.year : null
+
+      const year1NetCashFlow = yearsData[0]?.netCashFlowIdr || 0
+      const simplePaybackYears = capexIdr > 0 && year1NetCashFlow > 0
+        ? Number((capexIdr / year1NetCashFlow).toFixed(1))
+        : null
+
+      const total25yrSavingsIdr = yearsData.reduce((sum, d) => sum + d.billSavingsIdr + d.carbonRevenueIdr, 0)
+      const roi25yrPct = capexIdr > 0
+        ? Math.round(((cumulativeCashFlow) / capexIdr) * 100)
+        : 0
+
+      return {
+        capexIdr,
+        yearsData,
+        breakevenYear,
+        simplePaybackYears,
+        npv25yrIdr: Math.round(cumulativeNpv),
+        total25yrSavingsIdr: Math.round(total25yrSavingsIdr),
+        roi25yrPct
+      }
+    },
+
+    /**
+     * Identifies "Lower-Hanging Fruit" candidate buildings across campus
+     */
+    candidateBuildings: () => (buildings: any[]) => {
+      if (!buildings || !buildings.length) {
+        return { solar: [], flood: [], thermal: [] }
+      }
+
+      const solar = buildings
+        .filter((b) => {
+          const props = b.properties || b
+          const area = Number(props.area) || 0
+          const pot = Number(props.pot_energy_mean) || 0
+          const shade = Number(props.l_shade_mean) || 0
+          const specificYield = area > 0 ? pot / (area * 0.2) : 0
+          return specificYield >= 1250 && shade < 0.15 && area >= 250
+        })
+        .sort((a, b) => (Number(b.properties?.pot_energy_mean) || 0) - (Number(a.properties?.pot_energy_mean) || 0))
+        .slice(0, 15)
+        .map((b) => b.properties?.id || b.id)
+
+      const flood = buildings
+        .filter((b) => {
+          const props = b.properties || b
+          return props.flood_risk_level === 'Critical' || props.flood_risk_level === 'High'
+        })
+        .sort((a, b) => (Number(b.properties?.adjacent_flood_risk_m3) || 0) - (Number(a.properties?.adjacent_flood_risk_m3) || 0))
+        .slice(0, 15)
+        .map((b) => b.properties?.id || b.id)
+
+      const thermal = buildings
+        .filter((b) => {
+          const props = b.properties || b
+          return (Number(props.l_shade_mean) || 0) > 0.20 || (Number(props.height_google) || 0) > 12
+        })
+        .slice(0, 15)
+        .map((b) => b.properties?.id || b.id)
+
+      return { solar, flood, thermal }
     },
 
     /**
@@ -206,6 +355,7 @@ export const useScenarioStore = defineStore('scenario', {
   actions: {
     addIntervention(item: InterventionItem) {
       this.interventions.push(item)
+      persistInterventions(this.interventions)
     },
 
     toggleDashboard() {
@@ -227,6 +377,7 @@ export const useScenarioStore = defineStore('scenario', {
       if (item.quantity > 0) {
         this.interventions.push(item)
       }
+      persistInterventions(this.interventions)
     },
 
     saveBuildingGreening(item: InterventionItem) {
@@ -236,6 +387,7 @@ export const useScenarioStore = defineStore('scenario', {
       if (item.quantity > 0) {
         this.interventions.push(item)
       }
+      persistInterventions(this.interventions)
     },
 
     saveBuildingToren(item: InterventionItem) {
@@ -245,14 +397,17 @@ export const useScenarioStore = defineStore('scenario', {
       if (item.quantity > 0) {
         this.interventions.push(item)
       }
+      persistInterventions(this.interventions)
     },
 
     removeIntervention(id: string) {
       this.interventions = this.interventions.filter((i) => i.id !== id)
+      persistInterventions(this.interventions)
     },
 
     clearAllInterventions() {
       this.interventions = []
+      persistInterventions(this.interventions)
     },
 
     exportScenarioJson() {

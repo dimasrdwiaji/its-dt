@@ -21,7 +21,8 @@
     "primeflex": "^4.0.0",
     "primeicons": "^8.0.2",
     "primevue": "^4.5.4",
-    "vue": "^3.5.12"
+    "vue": "^3.5.12",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@types/mapbox-gl": "^3.5.0",

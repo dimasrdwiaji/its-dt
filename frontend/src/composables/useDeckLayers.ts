@@ -27,6 +27,37 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
       }
     }
 
+    // 0b. Campus Geospatial Road & Pathway Network
+    if (store.layersVisibility.roads && store.roadData?.features?.length) {
+      layers.push(
+        new GeoJsonLayer({
+          id: 'campus-roads',
+          data: store.roadData.features,
+          stroked: true,
+          filled: false,
+          lineWidthUnits: 'meters',
+          getLineWidth: (f: any) => {
+            const hwy = f.properties?.highway
+            if (hwy === 'primary' || hwy === 'primary_link') return 7.0
+            if (hwy === 'secondary' || hwy === 'secondary_link') return 5.5
+            if (hwy === 'tertiary' || hwy === 'tertiary_link') return 4.0
+            if (hwy === 'service' || hwy === 'residential') return 3.2
+            return 2.0
+          },
+          lineWidthMinPixels: 1.5,
+          getLineColor: (f: any) => {
+            const hwy = f.properties?.highway
+            if (hwy === 'primary' || hwy === 'primary_link') return [56, 189, 248, 220] // Bright cyan
+            if (hwy === 'secondary' || hwy === 'secondary_link') return [14, 165, 233, 190]
+            if (hwy === 'tertiary' || hwy === 'tertiary_link') return [148, 163, 184, 170]
+            if (hwy === 'footway' || hwy === 'pedestrian' || hwy === 'cycleway') return [52, 211, 153, 160] // Emerald pedestrian path
+            return [100, 116, 139, 140]
+          },
+          pickable: false
+        })
+      )
+    }
+
     // 1. Campus Buildings LoD1 Extruded Layer
     if (store.layersVisibility.buildings && store.buildingData?.features?.length) {
       layers.push(
@@ -71,6 +102,21 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
             return getBuildingColor(f.properties, store.colorMode)
           },
           getLineColor: (f: any) => {
+            // Low-Hanging Fruit highlight borders
+            if (store.lowHangingFruitFilter !== 'none' && store.buildingData?.features?.length) {
+              const candidates = scenarioStore.candidateBuildings(store.buildingData.features)
+              const bldgId = f.properties?.id
+              if (store.lowHangingFruitFilter === 'solar' && candidates.solar.includes(bldgId)) {
+                return [251, 191, 36, 255] // Golden candidate halo
+              }
+              if (store.lowHangingFruitFilter === 'flood' && candidates.flood.includes(bldgId)) {
+                return [14, 165, 233, 255] // Sky blue candidate halo
+              }
+              if (store.lowHangingFruitFilter === 'thermal' && candidates.thermal.includes(bldgId)) {
+                return [52, 211, 153, 255] // Emerald candidate halo
+              }
+            }
+
             // Solar active wireframe / border amber
             const solar = scenarioStore.getBuildingSolar(f.properties?.id)
             if (solar && solar.metadata?.showPanels !== false && store.colorMode === 'energy') {
@@ -91,10 +137,25 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
 
             return [148, 163, 184, 80]
           },
+          getLineWidth: (f: any) => {
+            if (store.lowHangingFruitFilter !== 'none' && store.buildingData?.features?.length) {
+              const candidates = scenarioStore.candidateBuildings(store.buildingData.features)
+              const bldgId = f.properties?.id
+              if (
+                (store.lowHangingFruitFilter === 'solar' && candidates.solar.includes(bldgId)) ||
+                (store.lowHangingFruitFilter === 'flood' && candidates.flood.includes(bldgId)) ||
+                (store.lowHangingFruitFilter === 'thermal' && candidates.thermal.includes(bldgId))
+              ) {
+                return 4
+              }
+            }
+            return 1
+          },
           lineWidthMinPixels: 1,
           updateTriggers: {
             getFillColor: [store.colorMode, store.selectedBuilding?.id, scenarioStore.interventions.length, scenarioStore.totalStorageAddedM3],
-            getLineColor: [store.colorMode, store.selectedBuilding?.id, scenarioStore.interventions.length, scenarioStore.totalStorageAddedM3]
+            getLineColor: [store.colorMode, store.selectedBuilding?.id, scenarioStore.interventions.length, scenarioStore.totalStorageAddedM3, store.lowHangingFruitFilter],
+            getLineWidth: [store.lowHangingFruitFilter]
           },
           onClick: (info: any) => {
             if (store.activeTool === 'info') {
@@ -145,15 +206,15 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
           })
         )
       } else {
-        // Procedural Trunks
+        // Procedural Trunks (only for true trees, omitted for shrubs & groundcover)
         layers.push(
           new ColumnLayer({
             id: 'tree-trunks',
-            data: trees,
+            data: trees.filter((t: any) => !t.metadata?.speciesId?.startsWith('shrub_') && !t.metadata?.speciesId?.startsWith('ground_')),
             diskResolution: 8,
             radius: 0.8,
             extruded: true,
-            getElevation: 4,
+            getElevation: (d: any) => d.metadata?.speciesId === 'tree_trembesi' ? 5.5 : 3.8,
             getPosition: (d: any) => d.coordinates,
             getFillColor: [110, 75, 40, 255],
             pickable: false
@@ -165,18 +226,36 @@ export function useDeckLayers(store: ReturnType<typeof useMapStore>) {
           new ColumnLayer({
             id: 'tree-canopies',
             data: trees,
-            diskResolution: 16,
-            radius: (d: any) => d.metadata?.canopyRadiusM || 6,
+            diskResolution: 20,
+            radius: (d: any) => d.metadata?.canopyRadiusM || 4.5,
             extruded: true,
-            getElevation: 7,
+            getElevation: (d: any) => {
+              const sp = d.metadata?.speciesId
+              if (sp?.startsWith('ground_')) return 0.25
+              if (sp?.startsWith('shrub_')) return 1.8
+              if (sp === 'tree_trembesi') return 9.5
+              return 6.5
+            },
             getPosition: (d: any) => d.coordinates,
             getFillColor: (d: any) => {
-              return d.metadata?.speciesId === 'tree_trembesi'
-                ? [22, 163, 74, 220]
-                : [34, 197, 94, 220]
+              const sp = d.metadata?.speciesId
+              if (sp === 'tree_tabebuya') return [250, 204, 21, 235] // Golden flower blossom
+              if (sp === 'tree_trembesi') return [22, 163, 74, 230] // Forest green
+              if (sp === 'tree_angsana') return [34, 197, 94, 230] // Leaf green
+              if (sp === 'tree_ketapang_kencana') return [16, 185, 129, 230] // Vibrant emerald
+              if (sp === 'shrub_pucuk_merah') return [239, 68, 68, 230] // Crimson red-orange
+              if (sp === 'shrub_bougainvillea') return [236, 72, 153, 230] // Magenta
+              if (sp === 'ground_rumput_gajah_mini') return [132, 204, 22, 210] // Turf lime green
+              return [34, 197, 94, 220]
             },
-            getLineColor: [20, 83, 45, 240],
-            lineWidthMinPixels: 2,
+            getLineColor: (d: any) => {
+              const sp = d.metadata?.speciesId
+              if (sp === 'tree_tabebuya') return [202, 138, 4, 240]
+              if (sp === 'shrub_pucuk_merah') return [185, 28, 28, 240]
+              if (sp === 'shrub_bougainvillea') return [190, 24, 93, 240]
+              return [20, 83, 45, 240]
+            },
+            lineWidthMinPixels: 1.5,
             pickable: true,
             autoHighlight: true,
             highlightColor: [52, 211, 153, 240],

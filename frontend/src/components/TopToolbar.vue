@@ -22,8 +22,13 @@ function handleToolSelect(tool: ActiveTool) {
 }
 
 const treeSpeciesOptions = [
-  { label: 'Trembesi (10m)', value: 'tree_trembesi' },
-  { label: 'Angsana (6m)', value: 'tree_angsana' }
+  { label: 'Tabebuya (4.5m street tree)', value: 'tree_tabebuya' },
+  { label: 'Trembesi (10m large canopy)', value: 'tree_trembesi' },
+  { label: 'Angsana (6m roadside)', value: 'tree_angsana' },
+  { label: 'Ketapang Kencana (5m)', value: 'tree_ketapang_kencana' },
+  { label: 'Pucuk Merah (1.2m shrub)', value: 'shrub_pucuk_merah' },
+  { label: 'Bougainvillea (1m shrub)', value: 'shrub_bougainvillea' },
+  { label: 'Rumput Gajah Mini (turf)', value: 'ground_rumput_gajah_mini' }
 ]
 </script>
 
@@ -107,7 +112,7 @@ const treeSpeciesOptions = [
       <!-- Plant Tree Tool (Ecology) -->
       <Button
         icon="pi pi-tree"
-        label="Plant Tree"
+        label="Plant Tree/Shrub"
         size="small"
         :severity="mapStore.activeTool === 'plant_tree' ? 'success' : 'secondary'"
         :outlined="mapStore.activeTool !== 'plant_tree'"
@@ -120,7 +125,7 @@ const treeSpeciesOptions = [
         :options="treeSpeciesOptions"
         optionLabel="label"
         optionValue="value"
-        class="w-10rem text-xs"
+        class="w-14rem text-xs"
         size="small"
       >
         <template #value="slotProps">
@@ -130,6 +135,17 @@ const treeSpeciesOptions = [
           </div>
         </template>
       </Select>
+
+      <Button
+        v-if="mapStore.activeTool === 'plant_tree'"
+        :icon="mapStore.snapToRoad ? 'pi pi-compass' : 'pi pi-map-marker'"
+        :label="mapStore.snapToRoad ? 'Curb Snap: ON' : 'Curb Snap: OFF'"
+        size="small"
+        :severity="mapStore.snapToRoad ? 'success' : 'secondary'"
+        :outlined="!mapStore.snapToRoad"
+        class="text-xs"
+        @click="mapStore.toggleSnapToRoad()"
+      />
 
       <Button
         v-if="mapStore.activeTool === 'plant_tree'"

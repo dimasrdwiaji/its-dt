@@ -166,7 +166,10 @@ const effectiveHydrology = computed(() => {
 })
 
 const effectiveFloodSeverity = computed(() => {
-  switch (effectiveHydrology.value.effectiveLevel) {
+  const lvl = effectiveHydrology.value.isDowngraded
+    ? effectiveHydrology.value.effectiveLevel
+    : effectiveHydrology.value.baselineLevel
+  switch (lvl) {
     case 'Critical': return 'danger'
     case 'High': return 'warn'
     case 'Medium': return 'info'
@@ -357,15 +360,16 @@ function closeCard() {
           <i class="pi pi-exclamation-triangle mr-2 text-red-400"></i>
           Adjacent Flood Risk
           <FormulaTooltip
-            title="Adjacent Flood Vulnerability Rating"
-            plainWords="Flooding vulnerability determined by overland flow ponding directly adjacent to the building perimeter, dynamically mitigated by toren retention and nearby dry wells (45m radius) or retention ponds (120m radius)."
-            formula="Risk Level = f(Baseline Hazard Flow - Ground Infiltration Relief - Toren Retention)"
+            title="Adjacent Flood Vulnerability & Relief Formulation"
+            plainWords="Current condition on page load reflects baseline unmitigated overland runoff from upstream DEMNAS terrain. Installing rooftop torens or placing nearby modular dry wells (45m radius) or retention ponds (120m radius) intercepts runoff, attenuating perimeter flood hazard flow and downgrading the risk level."
+            formula="Q_eff = max(0, Q_baseline - V_toren - ∑ V_ground × (1 - d/R))"
             :variables="[
-              { name: 'Baseline Level', value: effectiveHydrology.baselineLevel },
+              { name: 'Current Baseline Level', value: `${effectiveHydrology.baselineLevel} (${effectiveHydrology.baselineAdjacentFlowM3} m³)` },
               { name: 'Ground Infiltration Relief', value: `${effectiveHydrology.groundReliefM3} m³` },
-              { name: 'Net Effective Flow', value: `${effectiveHydrology.effectiveAdjacentFlowM3} m³` }
+              { name: 'Net Effective Overland Flow', value: `${effectiveHydrology.effectiveAdjacentFlowM3} m³` },
+              { name: 'Downgrade Thresholds', value: 'Critical (≥50m³), High (≥20m³), Medium (≥5m³), Low (<5m³)' }
             ]"
-            source="DEMNAS Pit-Filled Flow Accumulation & Pooling Depth"
+            source="SNI 8456:2017 & DEMNAS D8 Pit-Filled Flow Routing"
           />
         </span>
         <div class="flex items-center gap-1">
@@ -377,7 +381,7 @@ function closeCard() {
           />
           <Tag
             v-else
-            :value="effectiveHydrology.effectiveLevel"
+            :value="effectiveHydrology.baselineLevel"
             :severity="effectiveFloodSeverity"
             size="small"
           />

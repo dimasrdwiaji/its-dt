@@ -9,6 +9,7 @@ import AccordionContent from 'primevue/accordioncontent'
 import Checkbox from 'primevue/checkbox'
 import Slider from 'primevue/slider'
 import Button from 'primevue/button'
+import Tag from 'primevue/tag'
 import FormulaTooltip from '@/components/common/FormulaTooltip.vue'
 
 const mapStore = useMapStore()
@@ -108,6 +109,72 @@ function getRasterVariables(r: any) {
                   <i class="pi pi-building mr-2 text-slate-300"></i>
                   <span>Campus 3D Structures (LoD1)</span>
                 </label>
+              </div>
+
+              <!-- Geospatial Road Network Checkbox -->
+              <div class="layer-item">
+                <Checkbox
+                  v-model="mapStore.layersVisibility.roads"
+                  inputId="layer-roads"
+                  :binary="true"
+                />
+                <label for="layer-roads" class="layer-label">
+                  <i class="pi pi-compass mr-2 text-cyan-400"></i>
+                  <span>Road & Pathway Network (OSM)</span>
+                </label>
+              </div>
+
+              <!-- Low-Hanging Fruit Prioritization -->
+              <div class="thematic-toggle-box">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="sub-label">Low-Hanging Fruit Priority</span>
+                  <Tag
+                    v-if="mapStore.lowHangingFruitFilter !== 'none'"
+                    :value="mapStore.lowHangingFruitFilter.toUpperCase()"
+                    :severity="mapStore.lowHangingFruitFilter === 'solar' ? 'warn' : (mapStore.lowHangingFruitFilter === 'flood' ? 'info' : 'success')"
+                    size="small"
+                  />
+                </div>
+                <div class="grid grid-cols-4 gap-1 text-[10px] mt-1">
+                  <Button
+                    label="None"
+                    size="small"
+                    :severity="mapStore.lowHangingFruitFilter === 'none' ? 'primary' : 'secondary'"
+                    :outlined="mapStore.lowHangingFruitFilter !== 'none'"
+                    class="py-1 px-1 text-[10px]"
+                    @click="mapStore.setLowHangingFruitFilter('none')"
+                  />
+                  <Button
+                    label="Solar"
+                    icon="pi pi-sun"
+                    size="small"
+                    :severity="mapStore.lowHangingFruitFilter === 'solar' ? 'warn' : 'secondary'"
+                    :outlined="mapStore.lowHangingFruitFilter !== 'solar'"
+                    class="py-1 px-1 text-[10px]"
+                    @click="mapStore.setLowHangingFruitFilter('solar')"
+                  />
+                  <Button
+                    label="Flood"
+                    icon="pi pi-cloud"
+                    size="small"
+                    :severity="mapStore.lowHangingFruitFilter === 'flood' ? 'info' : 'secondary'"
+                    :outlined="mapStore.lowHangingFruitFilter !== 'flood'"
+                    class="py-1 px-1 text-[10px]"
+                    @click="mapStore.setLowHangingFruitFilter('flood')"
+                  />
+                  <Button
+                    label="Cooling"
+                    icon="pi pi-leaf"
+                    size="small"
+                    :severity="mapStore.lowHangingFruitFilter === 'thermal' ? 'success' : 'secondary'"
+                    :outlined="mapStore.lowHangingFruitFilter !== 'thermal'"
+                    class="py-1 px-1 text-[10px]"
+                    @click="mapStore.setLowHangingFruitFilter('thermal')"
+                  />
+                </div>
+                <span class="text-[10px] text-slate-400 mt-1 block">
+                  Highlights high-payback solar roofs, critical flood pooling depressions, or urban thermal hotspots.
+                </span>
               </div>
 
               <!-- Basemap Style Selector (Migrated from TopToolbar) -->

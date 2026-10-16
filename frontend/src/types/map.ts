@@ -1,6 +1,10 @@
 export type ColorMode = 'energy' | 'ecology' | 'hydrology' | 'none'
 
-export type BaseMapStyle = 'dark' | 'streets' | 'satellite' | 'terrain'
+export type BaseMapStyle = 'light' | 'dark' | 'streets' | 'satellite' | 'terrain'
+
+export type CampusMode = 'explore' | 'plan'
+
+export type PlanTarget = 'building' | 'trees' | 'ground'
 
 export type ActiveTool = 'info' | 'measure' | 'plant_tree' | 'dry_well' | 'retention_pond' | null
 

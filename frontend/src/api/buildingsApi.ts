@@ -44,6 +44,16 @@ export async function fetchRasters(): Promise<any[]> {
   return response.data
 }
 
+export async function fetchRoads(): Promise<any> {
+  const response = await axios.get('/data/roads.geojson')
+  return response.data
+}
+
+export async function fetchInterventionCatalog(): Promise<any> {
+  const response = await axios.get('/data/intervention_catalog.json')
+  return response.data
+}
+
 export interface EcologyPredictionResult {
   baseline_lst_c: number
   new_lst_c: number
@@ -53,6 +63,8 @@ export interface EcologyPredictionResult {
   cost_idr: number
   co2_mitigation_kg_yr: number
 }
+
+import catalogData from '@/data/intervention_catalog.json'
 
 export async function predictEcology(lat: number, lon: number, interventionId: string): Promise<EcologyPredictionResult> {
   if (!IS_STATIC_MODE) {
@@ -68,19 +80,19 @@ export async function predictEcology(lat: number, lon: number, interventionId: s
     }
   }
 
-  // Client-side fallback using empirical tree parameters from intervention rules
-  const trees = (rulesData as any).ecology?.trees || []
-  const tree = trees.find((t: any) => t.id === interventionId) || trees[0]
-  const baselineLst = 36.5 // Campus mean October LST (°C)
-  const coolingDelta = tree.wall_cooling_celsius || (tree.id === 'trembesi' ? -1.8 : (tree.id === 'mahoni' ? -1.2 : -0.8))
+  // Client-side fallback using calibrated plant parameters from verified intervention catalog
+  const allPlants = (catalogData as any).plants || []
+  const plant = allPlants.find((p: any) => p.id === interventionId) || allPlants[0]
+  const baselineLst = 36.8 // Surabaya campus October daytime mean LST (°C)
+  const coolingDelta = plant.cooling_delta_c || -1.6
 
   return {
     baseline_lst_c: baselineLst,
     new_lst_c: Number((baselineLst + coolingDelta).toFixed(2)),
     delta_c: coolingDelta,
-    intervention: tree.name || 'Campus Tree',
-    canopy_radius_m: tree.canopy_radius_m || 6,
-    cost_idr: tree.cost_idr || 150000,
-    co2_mitigation_kg_yr: tree.co2_mitigation_kg_yr || 15.0
+    intervention: plant.name,
+    canopy_radius_m: plant.canopy_radius_m || 4.5,
+    cost_idr: plant.planted_cost_idr || plant.nursery_cost_idr || 350000,
+    co2_mitigation_kg_yr: plant.co2_sequestration_kg_yr || 12.5
   }
 }

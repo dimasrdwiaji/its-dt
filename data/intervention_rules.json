@@ -2,19 +2,36 @@
     "ecology": {
         "trees": [
             {
+                "id": "tree_tabebuya",
+                "name": "Tabebuya Kuning (Handroanthus chrysotrichus)",
+                "type": "tree",
+                "description": "Signature street tree of Surabaya city. Deep non-damaging root system and vibrant seasonal yellow blossoms.",
+                "cost_idr": 425000,
+                "co2_mitigation_kg_yr": 12.5,
+                "canopy_radius_m": 4.5,
+                "sketchfab_query": "generic_broadleaf_tree",
+                "rf_deltas": {
+                    "greeness": 0.08,
+                    "wetness": 0.02,
+                    "dryness": -0.06,
+                    "NBR": 0.07,
+                    "NDMI": 0.03
+                }
+            },
+            {
                 "id": "tree_trembesi",
                 "name": "Trembesi (Samanea saman)",
                 "type": "tree",
-                "description": "Large canopy tree, superior tropical shade and high carbon sequestration.",
-                "cost_idr": 250000,
+                "description": "Giant umbrella canopy tree, superior tropical shade and highest carbon sequestration champion.",
+                "cost_idr": 550000,
                 "co2_mitigation_kg_yr": 28.5,
-                "canopy_radius_m": 10,
+                "canopy_radius_m": 10.0,
                 "sketchfab_query": "samanea_saman",
                 "rf_deltas": {
                     "greeness": 0.15,
                     "wetness": 0.05,
-                    "dryness": -0.1,
-                    "NBR": 0.1,
+                    "dryness": -0.10,
+                    "NBR": 0.10,
                     "NDMI": 0.05
                 }
             },
@@ -22,17 +39,85 @@
                 "id": "tree_angsana",
                 "name": "Angsana (Pterocarpus indicus)",
                 "type": "tree",
-                "description": "Medium urban canopy tree, good for road margins and pedestrian walkways.",
-                "cost_idr": 150000,
-                "co2_mitigation_kg_yr": 15.0,
-                "canopy_radius_m": 6,
+                "description": "Medium urban canopy tree, nitrogen-fixing root nodules, classic Indonesian roadside shade tree.",
+                "cost_idr": 350000,
+                "co2_mitigation_kg_yr": 21.8,
+                "canopy_radius_m": 6.0,
                 "sketchfab_query": "generic_broadleaf_tree",
                 "rf_deltas": {
-                    "greeness": 0.1,
+                    "greeness": 0.10,
                     "wetness": 0.03,
                     "dryness": -0.05,
                     "NBR": 0.08,
                     "NDMI": 0.03
+                }
+            },
+            {
+                "id": "tree_ketapang_kencana",
+                "name": "Ketapang Kencana (Terminalia mantaly)",
+                "type": "tree",
+                "description": "Layered horizontal tiered foliage creating elegant modern architectural shade for campus avenues.",
+                "cost_idr": 600000,
+                "co2_mitigation_kg_yr": 16.0,
+                "canopy_radius_m": 5.0,
+                "sketchfab_query": "generic_broadleaf_tree",
+                "rf_deltas": {
+                    "greeness": 0.09,
+                    "wetness": 0.025,
+                    "dryness": -0.06,
+                    "NBR": 0.07,
+                    "NDMI": 0.03
+                }
+            },
+            {
+                "id": "shrub_pucuk_merah",
+                "name": "Pucuk Merah (Syzygium myrtifolium)",
+                "type": "shrub",
+                "description": "Dense tropical roadside hedge absorbing particulate air pollution and ground thermal radiation.",
+                "cost_idr": 55000,
+                "co2_mitigation_kg_yr": 4.2,
+                "canopy_radius_m": 1.2,
+                "sketchfab_query": "shrub",
+                "rf_deltas": {
+                    "greeness": 0.04,
+                    "wetness": 0.01,
+                    "dryness": -0.02,
+                    "NBR": 0.03,
+                    "NDMI": 0.01
+                }
+            },
+            {
+                "id": "shrub_bougainvillea",
+                "name": "Bougainvillea / Kembang Kertas",
+                "type": "shrub",
+                "description": "Hardy drought-tolerant flowering shrub with high solar reflectance and vibrant roadside color.",
+                "cost_idr": 45000,
+                "co2_mitigation_kg_yr": 3.0,
+                "canopy_radius_m": 1.0,
+                "sketchfab_query": "shrub",
+                "rf_deltas": {
+                    "greeness": 0.03,
+                    "wetness": 0.01,
+                    "dryness": -0.015,
+                    "NBR": 0.025,
+                    "NDMI": 0.01
+                }
+            },
+            {
+                "id": "turf_gajah_mini",
+                "name": "Rumput Gajah Mini (Axonopus compressus)",
+                "type": "turf",
+                "description": "Groundcover lawn replacing bare impervious soil, mitigating dust and lowering ground albedo heat.",
+                "cost_idr": 25000,
+                "co2_mitigation_kg_yr": 0.8,
+                "canopy_radius_m": 0.8,
+                "sketchfab_query": "grass",
+                "rf_deltas": {
+                    "greeness": 0.02,
+                    "wetness": 0.005,
+                    "dryness": -0.01,
+                    "NBR": 0.015,
+                    "NDMI": 0.005
                 }
             }
         ],

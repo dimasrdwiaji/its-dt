@@ -121,16 +121,16 @@ const activeRasterLegends = computed(() => {
 .legend-panel {
   position: absolute;
   bottom: 20px;
-  left: 56px; /* Offset to the right of Mapbox navigation zoom & pitch tools */
+  left: 360px;
+  transition: left 0.2s ease-out;
   width: 235px;
   max-width: calc(100vw - 80px);
-  background: rgba(15, 23, 42, 0.94);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 10px;
-  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px 14px;
   z-index: 950;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 14px rgba(41, 37, 36, 0.06);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -152,26 +152,26 @@ const activeRasterLegends = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 6px;
 }
 
 .panel-header-title {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .legend-close-btn {
   background: transparent;
   border: none;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 2px 4px;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,7 +179,7 @@ const activeRasterLegends = computed(() => {
 }
 
 .legend-close-btn:hover {
-  color: #f1f5f9;
+  color: var(--text-main);
 }
 
 .legend-block {
@@ -189,15 +189,15 @@ const activeRasterLegends = computed(() => {
 }
 
 .border-top-subtle {
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  border-top: 1px solid var(--border-subtle);
   padding-top: 8px;
 }
 
 .legend-title {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: #94a3b8;
+  color: var(--text-main);
   text-transform: uppercase;
 }
 
@@ -217,19 +217,19 @@ const activeRasterLegends = computed(() => {
   width: 14px;
   height: 14px;
   border-radius: 3px;
-  background: #e2e8f0;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: #f5f2eb;
+  border: 1px solid var(--border-strong);
 }
 
 .neutral-text {
-  font-size: 10.5px;
-  color: #cbd5e1;
+  font-size: 11px;
+  color: var(--text-body);
 }
 
 .legend-ticks {
   display: flex;
   justify-content: space-between;
-  font-size: 9.5px;
-  color: #64748b;
+  font-size: 10px;
+  color: var(--text-muted);
 }
 </style>

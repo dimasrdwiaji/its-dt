@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
-import type { ColorMode, BaseMapStyle, ActiveTool, BuildingProperties, BuildingFeatureCollection } from '@/types'
-import { fetchBuildings, fetchCatalog, fetchRasters } from '@/api/buildingsApi'
+import type { ColorMode, BaseMapStyle, CampusMode, PlanTarget, ActiveTool, BuildingProperties, BuildingFeatureCollection } from '@/types'
+import { fetchBuildings, fetchCatalog, fetchRasters, fetchRoads } from '@/api/buildingsApi'
 import * as turf from '@turf/turf'
 
 export const useMapStore = defineStore('map', {
   state: () => ({
     colorMode: 'none' as ColorMode,
-    baseMapStyle: 'dark' as BaseMapStyle,
+    baseMapStyle: 'light' as BaseMapStyle,
+    campusMode: 'explore' as CampusMode,
+    planTarget: 'building' as PlanTarget,
+    cameraFlyToTarget: null as { lng: number; lat: number; zoom?: number; pitch?: number } | null,
     selectedBuilding: null as BuildingProperties | null,
     activeTool: 'info' as ActiveTool,
     showContent: true,
@@ -14,13 +17,17 @@ export const useMapStore = defineStore('map', {
     measurePoints: [] as [number, number][],
     measureDistanceMeters: null as number | null,
     layersVisibility: {
-      buildings: true
+      buildings: true,
+      roads: true
     },
+    roadData: null as any,
+    snapToRoad: true,
+    lowHangingFruitFilter: 'none' as 'none' | 'solar' | 'flood' | 'thermal',
     buildingData: null as BuildingFeatureCollection | null,
     catalog: null as any,
     rasterLayers: [] as any[],
     activeRasters: {} as Record<string, { visible: boolean; opacity: number }>,
-    selectedTreeSpecies: 'tree_trembesi' as string,
+    selectedTreeSpecies: 'tree_tabebuya' as string,
     latestPrediction: null as any,
     pondPoints: [] as [number, number][],
     pendingPond: null as { coordinates: [number, number][], areaM2: number } | null,
@@ -32,6 +39,45 @@ export const useMapStore = defineStore('map', {
   }),
 
   actions: {
+    setCampusMode(mode: CampusMode) {
+      this.campusMode = mode
+      if (mode === 'explore') {
+        this.activeTool = 'info'
+      } else if (mode === 'plan') {
+        if (this.planTarget === 'trees') {
+          this.activeTool = 'plant_tree'
+        } else if (this.planTarget === 'ground') {
+          this.activeTool = 'dry_well'
+        } else {
+          this.activeTool = 'info'
+        }
+      }
+    },
+
+    setPlanTarget(target: PlanTarget) {
+      this.planTarget = target
+      if (target === 'trees') {
+        this.setActiveTool('plant_tree')
+      } else if (target === 'ground') {
+        this.setActiveTool('dry_well')
+      } else {
+        this.setActiveTool('info')
+      }
+    },
+
+    flyToLocation(coords: { lng: number; lat: number; zoom?: number; pitch?: number }) {
+      this.cameraFlyToTarget = {
+        lng: coords.lng,
+        lat: coords.lat,
+        zoom: coords.zoom ?? 17.5,
+        pitch: coords.pitch ?? 45
+      }
+    },
+
+    clearFlyTo() {
+      this.cameraFlyToTarget = null
+    },
+
     setColorMode(mode: ColorMode) {
       this.colorMode = mode
     },
@@ -51,6 +97,10 @@ export const useMapStore = defineStore('map', {
       }
       if (tool !== 'retention_pond') {
         this.clearPondPoints()
+        this.setSelectedPond(null)
+      }
+      if (tool !== 'dry_well') {
+        this.setSelectedDryWell(null)
       }
     },
 
@@ -138,17 +188,31 @@ export const useMapStore = defineStore('map', {
       }
     },
 
+    toggleRoads() {
+      this.layersVisibility.roads = !this.layersVisibility.roads
+    },
+
+    toggleSnapToRoad() {
+      this.snapToRoad = !this.snapToRoad
+    },
+
+    setLowHangingFruitFilter(filter: 'none' | 'solar' | 'flood' | 'thermal') {
+      this.lowHangingFruitFilter = filter
+    },
+
     async initData() {
       this.loading = true
       try {
-        const [buildings, catalog, rasters] = await Promise.all([
+        const [buildings, catalog, rasters, roads] = await Promise.all([
           fetchBuildings(),
           fetchCatalog().catch(() => null),
-          fetchRasters().catch(() => [])
+          fetchRasters().catch(() => []),
+          fetchRoads().catch(() => null)
         ])
         this.buildingData = buildings
         this.catalog = catalog
         this.rasterLayers = rasters || []
+        this.roadData = roads
       } catch (err: any) {
         this.error = err.message || 'Failed to load digital twin data'
         console.error(err)

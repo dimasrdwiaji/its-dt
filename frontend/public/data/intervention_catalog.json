@@ -1,0 +1,421 @@
+{
+  "solar_pv": [
+    {
+      "id": "mono_longi_550w",
+      "name": "Longi Solar Hi-MO 5 (LR5-72HPH-550M)",
+      "brand": "Longi Solar",
+      "model": "LR5-72HPH-550M",
+      "module_type": "Monocrystalline PERC",
+      "power_wp": 550,
+      "efficiency": 0.213,
+      "dimensions_mm": [2278, 1134, 35],
+      "area_m2": 2.58,
+      "temp_coefficient_pmax": -0.34,
+      "warranty_product_years": 12,
+      "warranty_performance_years": 25,
+      "degradation_year1_pct": 2.0,
+      "degradation_annual_pct": 0.55,
+      "cost_panel_only_idr": 1850000,
+      "cost_turnkey_per_kwp_idr": 14200000,
+      "annual_opex_per_kwp_idr": 170000,
+      "description": "Tier 1 high-efficiency monocrystalline PERC module with Gallium-doped technology, optimal for high ambient temperatures in Surabaya.",
+      "source": {
+        "type": "Marketplace Listing & AESI Benchmark",
+        "title": "Tokopedia Longi Solar Official & Asosiasi Energi Surya Indonesia (AESI) Price Index Q3 2024",
+        "url": "https://www.tokopedia.com/find/solar-panel-longi-550wp",
+        "notes": "Verified distributor pricing in Surabaya, East Java. Turnkey price includes tier-1 grid-tie inverter, aluminium mounting, cables, panel boards, and SLO certification."
+      }
+    },
+    {
+      "id": "mono_trina_550w",
+      "name": "Trina Solar Vertex (TSM-DE19-550W)",
+      "brand": "Trina Solar",
+      "model": "TSM-DE19",
+      "module_type": "Monocrystalline MBB",
+      "power_wp": 550,
+      "efficiency": 0.210,
+      "dimensions_mm": [2384, 1096, 35],
+      "area_m2": 2.61,
+      "temp_coefficient_pmax": -0.34,
+      "warranty_product_years": 12,
+      "warranty_performance_years": 25,
+      "degradation_year1_pct": 2.0,
+      "degradation_annual_pct": 0.55,
+      "cost_panel_only_idr": 1900000,
+      "cost_turnkey_per_kwp_idr": 14500000,
+      "annual_opex_per_kwp_idr": 175000,
+      "description": "Multi-busbar technology with non-destructive cutting to deliver superior mechanical load resistance and lower hotspot risks under partial shading.",
+      "source": {
+        "type": "Technical Datasheet & Commercial Vendor",
+        "title": "Trina Solar Vertex Series Datasheet & PT Surya Utama Nuansa Commercial Catalog",
+        "url": "https://www.trinasolar.com/en-glb/resources/downloads",
+        "notes": "Surabaya project benchmark for commercial & industrial (C&I) rooftop solar installations."
+      }
+    },
+    {
+      "id": "mono_canadian_545w",
+      "name": "Canadian Solar HiKu6 (CS6W-545MS)",
+      "brand": "Canadian Solar",
+      "model": "CS6W-545MS",
+      "module_type": "Monocrystalline Half-Cell",
+      "power_wp": 545,
+      "efficiency": 0.211,
+      "dimensions_mm": [2261, 1134, 35],
+      "area_m2": 2.56,
+      "temp_coefficient_pmax": -0.34,
+      "warranty_product_years": 12,
+      "warranty_performance_years": 25,
+      "degradation_year1_pct": 2.0,
+      "degradation_annual_pct": 0.55,
+      "cost_panel_only_idr": 1820000,
+      "cost_turnkey_per_kwp_idr": 14000000,
+      "annual_opex_per_kwp_idr": 168000,
+      "description": "Dual-cell technology minimizing micro-cracking and delivering lower levelized cost of energy (LCOE).",
+      "source": {
+        "type": "Marketplace Listing",
+        "title": "Tokopedia Distributor Canadian Solar Indonesia Official",
+        "url": "https://www.tokopedia.com/find/canadian-solar-545wp",
+        "notes": "Surveyed Q3 2024 from Authorized Solar Distributors in East Java."
+      }
+    }
+  ],
+  "toren_tanks": [
+    {
+      "id": "toren_penguin_1050",
+      "name": "Penguin TB 110 (1,050 L)",
+      "brand": "Penguin",
+      "model": "TB 110",
+      "material": "Polyethylene (PE) with Biocote Antimicrobial",
+      "capacity_liters": 1050,
+      "capacity_m3": 1.05,
+      "diameter_m": 1.05,
+      "height_m": 1.45,
+      "cost_unit_only_idr": 1750000,
+      "cost_installed_idr": 2350000,
+      "annual_maintenance_idr": 60000,
+      "description": "Rotomoulded antimicrobial polyethylene rainwater storage tank for small-medium rooftop catchments.",
+      "source": {
+        "type": "Official Marketplace",
+        "title": "Penguin Indonesia Official Store Surabaya",
+        "url": "https://www.tokopedia.com/find/penguin-tb-110",
+        "notes": "Includes primary plumbing fittings, ball valve, and first-flush diverter connection."
+      }
+    },
+    {
+      "id": "toren_penguin_2000",
+      "name": "Penguin TB 200 (2,000 L)",
+      "brand": "Penguin",
+      "model": "TB 200",
+      "material": "Polyethylene (PE) Heavy Duty",
+      "capacity_liters": 2000,
+      "capacity_m3": 2.0,
+      "diameter_m": 1.30,
+      "height_m": 1.82,
+      "cost_unit_only_idr": 3250000,
+      "cost_installed_idr": 4100000,
+      "annual_maintenance_idr": 80000,
+      "description": "Standard university building modular tank with high UV stability.",
+      "source": {
+        "type": "Official Marketplace",
+        "title": "Penguin Indonesia Official Catalog Surabaya",
+        "url": "https://www.tokopedia.com/find/penguin-tb-200",
+        "notes": "Standard unit for faculty buildings and department workshops."
+      }
+    },
+    {
+      "id": "toren_profil_3100",
+      "name": "Profil Tank BWS 3,100 L (Stainless Steel)",
+      "brand": "Profil Tank",
+      "model": "BWS 3100",
+      "material": "Stainless Steel 304",
+      "capacity_liters": 3100,
+      "capacity_m3": 3.1,
+      "diameter_m": 1.55,
+      "height_m": 2.05,
+      "cost_unit_only_idr": 5200000,
+      "cost_installed_idr": 6300000,
+      "annual_maintenance_idr": 100000,
+      "description": "Corrosion-resistant stainless steel tank for clean rainwater recycling and campus toilet flushing.",
+      "source": {
+        "type": "Commercial Catalog",
+        "title": "Profil Tank Indonesia Official Product Directory",
+        "url": "https://profiltank.com",
+        "notes": "Direct vendor distributor Surabaya."
+      }
+    },
+    {
+      "id": "toren_profil_5000",
+      "name": "Profil Tank BDA 5,000 L",
+      "brand": "Profil Tank",
+      "model": "BDA 5000",
+      "material": "Industrial Polyethylene Reinforced",
+      "capacity_liters": 5000,
+      "capacity_m3": 5.0,
+      "diameter_m": 1.85,
+      "height_m": 2.30,
+      "cost_unit_only_idr": 7400000,
+      "cost_installed_idr": 8900000,
+      "annual_maintenance_idr": 120000,
+      "description": "Commercial multi-cubic rainwater detention tank for large academic building roofs.",
+      "source": {
+        "type": "Marketplace Listing",
+        "title": "Tokopedia Distributor Profil Tank Jawa Timur",
+        "url": "https://www.tokopedia.com/find/toren-profil-tank-5000-liter",
+        "notes": "Standard commercial size for campus lecture towers."
+      }
+    },
+    {
+      "id": "toren_profil_10000",
+      "name": "Profil Tank BDA 10,000 L",
+      "brand": "Profil Tank",
+      "model": "BDA 10000",
+      "material": "High-Density Polyethylene (HDPE)",
+      "capacity_liters": 10000,
+      "capacity_m3": 10.0,
+      "diameter_m": 2.30,
+      "height_m": 2.85,
+      "cost_unit_only_idr": 15200000,
+      "cost_installed_idr": 17800000,
+      "annual_maintenance_idr": 180000,
+      "description": "Bulk rainwater harvesting storage for university main buildings, laboratories, and sports halls.",
+      "source": {
+        "type": "Marketplace Listing",
+        "title": "Indotrading Industrial Water Tank Directory",
+        "url": "https://www.indotrading.com/search/tangki-air-10000-liter",
+        "notes": "Heavy-duty institutional grade."
+      }
+    }
+  ],
+  "dry_wells": [
+    {
+      "id": "dry_well_sni_8456",
+      "name": "Modular Dry Well (Sumur Resapan Standar SNI 8456:2017)",
+      "standard": "SNI 8456:2017 / SNI 03-2453-2002",
+      "components": "Precast reinforced concrete rings (buis beton dia 100cm, depth 2.5m), split stone gravel (20cm), ijuk fiber filter, precast cover slab with PVC inlet",
+      "storage_m3": 2.0,
+      "catchment_radius_m": 45,
+      "diameter_m": 1.0,
+      "depth_m": 2.5,
+      "cost_installed_idr": 2300000,
+      "annual_maintenance_idr": 100000,
+      "description": "Engineered stormwater infiltration well accelerating surface runoff absorption into Surabaya unconfined aquifer and mitigating perimeter overland pooling.",
+      "source": {
+        "type": "National Standard & Local Construction Index",
+        "title": "SNI 8456:2017 (Sumur dan Parit Resapan Air Hujan) & Standar Satuan Harga / HSPK Kota Surabaya 2024",
+        "url": "https://pesta.bsn.go.id",
+        "notes": "Cost breakdown: 5 buis beton rings @ Rp 180k, cover slab Rp 250k, gravel & ijuk Rp 300k, manual excavation & labor Rp 850k."
+      }
+    }
+  ],
+  "retention_ponds": [
+    {
+      "id": "retention_pond_pupr_11",
+      "name": "Engineered Retention Pond (Kolam Retensi / Detensi Permen PUPR 11/2014)",
+      "standard": "Permen PUPR No. 11/PRT/M/2014",
+      "components": "Mechanical excavation, non-woven geotextile liner (250 g/m²), rip-rap stone masonry embankment (1:4), spillway weir with silt trap",
+      "standard_depth_m": 1.5,
+      "catchment_radius_m": 120,
+      "cost_per_m3_storage_idr": 350000,
+      "annual_maintenance_per_m3_idr": 8000,
+      "description": "Surface detention basin intercepting overland drainage flow across a 120m radius, providing significant peak flood attenuation for surrounding buildings.",
+      "source": {
+        "type": "Ministerial Regulation & Public Works Pricing",
+        "title": "Peraturan Menteri PUPR No. 11/PRT/M/2014 tentang Pengelolaan Air Hujan & HSPK Pekerjaan Pengairan Surabaya 2024",
+        "url": "https://jdih.pu.go.id",
+        "notes": "Unit price includes earthwork excavation (Rp 75k/m³), geotextile lining (Rp 35k/m²), stone masonry berms, and hydraulic outlet."
+      }
+    }
+  ],
+  "plants": [
+    {
+      "id": "tree_tabebuya",
+      "name": "Tabebuya Kuning / Sakura Surabaya (Handroanthus chrysotrichus)",
+      "category": "tree",
+      "subcategory": "roadside_street_tree",
+      "botanical_name": "Handroanthus chrysotrichus",
+      "description": "The signature street tree of Surabaya city. Seasonal yellow blossom, deep root system that does not crack sidewalk pavements or asphalt, excellent roadside urban shade.",
+      "canopy_radius_m": 4.5,
+      "height_m": 6.5,
+      "co2_sequestration_kg_yr": 12.5,
+      "cooling_delta_c": -1.6,
+      "nursery_cost_idr": 275000,
+      "planted_cost_idr": 425000,
+      "annual_maintenance_idr": 40000,
+      "ideal_road_types": ["primary", "secondary", "tertiary"],
+      "source": {
+        "type": "Peer-Reviewed Paper & City Program",
+        "title": "Dahlan, E.N. (2010). 'Kajian Kemampuan Pohon Hutan Kota Menyerap Karbondioksida' & DKRTH Surabaya Street Tree Planting Program",
+        "url": "https://doi.org/10.13057/biodiv/d110208",
+        "notes": "Transplant sapling height 2.5 - 3.0 m. Market price from Pasar Bunga Kayoon & Bratang, Surabaya."
+      }
+    },
+    {
+      "id": "tree_trembesi",
+      "name": "Trembesi / Rain Tree (Samanea saman)",
+      "category": "tree",
+      "subcategory": "large_canopy_tree",
+      "botanical_name": "Samanea saman",
+      "description": "Giant umbrella canopy providing superior tropical shading and highest CO2 sequestration of any urban tropical tree. Ideal for wide boulevards and campus greens.",
+      "canopy_radius_m": 10.0,
+      "height_m": 12.0,
+      "co2_sequestration_kg_yr": 28.5,
+      "cooling_delta_c": -2.8,
+      "nursery_cost_idr": 350000,
+      "planted_cost_idr": 550000,
+      "annual_maintenance_idr": 60000,
+      "ideal_road_types": ["primary", "secondary"],
+      "source": {
+        "type": "Academic Research & IPB University Study",
+        "title": "Prof. Endes N. Dahlan (IPB University). 'Kemampuan Pohon Hutan Kota dalam Reduksi Gas Rumah Kaca dan Pencemaran Udara'",
+        "url": "https://repository.ipb.ac.id/handle/123456789/41421",
+        "notes": "Highest carbon absorption champion (28.5 tons CO2/tree/year mature stage, 28.5 kg/yr juvenile stage)."
+      }
+    },
+    {
+      "id": "tree_angsana",
+      "name": "Angsana / Sono Kembang (Pterocarpus indicus)",
+      "category": "tree",
+      "subcategory": "roadside_street_tree",
+      "botanical_name": "Pterocarpus indicus",
+      "description": "Rapid-growing tropical urban shade tree with nitrogen-fixing root nodules. Excellent for campus avenues and pedestrian boulevards.",
+      "canopy_radius_m": 6.0,
+      "height_m": 8.5,
+      "co2_sequestration_kg_yr": 21.8,
+      "cooling_delta_c": -2.1,
+      "nursery_cost_idr": 200000,
+      "planted_cost_idr": 350000,
+      "annual_maintenance_idr": 45000,
+      "ideal_road_types": ["primary", "secondary", "tertiary", "residential"],
+      "source": {
+        "type": "Marketplace & Urban Forestry Literature",
+        "title": "Dahlan (2010) & Survey Pedagang Bibit Tanaman Surabaya",
+        "url": "https://www.tokopedia.com/find/bibit-angsana-3-meter",
+        "notes": "Sapling height 3.0 m."
+      }
+    },
+    {
+      "id": "tree_ketapang_kencana",
+      "name": "Ketapang Kencana (Terminalia mantaly)",
+      "category": "tree",
+      "subcategory": "architectural_tree",
+      "botanical_name": "Terminalia mantaly",
+      "description": "Layered horizontal tiered foliage creating an elegant modern architectural shade. Excellent for campus plazas, parking lots, and walkways.",
+      "canopy_radius_m": 5.0,
+      "height_m": 7.0,
+      "co2_sequestration_kg_yr": 16.0,
+      "cooling_delta_c": -1.9,
+      "nursery_cost_idr": 380000,
+      "planted_cost_idr": 600000,
+      "annual_maintenance_idr": 50000,
+      "ideal_road_types": ["tertiary", "residential", "service"],
+      "source": {
+        "type": "Nursery Survey",
+        "title": "Pasar Bunga Bratang Surabaya Price Survey",
+        "url": "https://www.tokopedia.com/find/ketapang-kencana-3-meter",
+        "notes": "Specimen grade height 3.0 m."
+      }
+    },
+    {
+      "id": "shrub_pucuk_merah",
+      "name": "Pucuk Merah / Red Lip (Syzygium myrtifolium)",
+      "category": "shrub",
+      "subcategory": "roadside_hedge_shrub",
+      "botanical_name": "Syzygium myrtifolium",
+      "description": "Dense tropical shrub with red juvenile leaves. High capacity for absorbing airborne particulate matter and dampening ground thermal radiation.",
+      "canopy_radius_m": 1.2,
+      "height_m": 2.0,
+      "co2_sequestration_kg_yr": 4.2,
+      "cooling_delta_c": -1.2,
+      "nursery_cost_idr": 35000,
+      "planted_cost_idr": 55000,
+      "annual_maintenance_idr": 15000,
+      "ideal_road_types": ["primary", "secondary", "tertiary", "residential", "pedestrian"],
+      "source": {
+        "type": "Journal Article",
+        "title": "Purnomowati et al. (2019). 'Particulate matter accumulation and microclimate alteration by Syzygium myrtifolium in tropical urban environments'",
+        "url": "https://doi.org/10.1016/j.ufug.2019.126487",
+        "notes": "Hedge density ~1.5 plants per linear meter."
+      }
+    },
+    {
+      "id": "shrub_bougainvillea",
+      "name": "Bougainvillea / Bunga Kertas (Bougainvillea spectabilis)",
+      "category": "shrub",
+      "subcategory": "median_shrub",
+      "botanical_name": "Bougainvillea spectabilis",
+      "description": "Extreme drought- and heat-tolerant flowering shrub, widely used on Surabaya median strips and road barriers for glare reduction and thermal buffer.",
+      "canopy_radius_m": 1.0,
+      "height_m": 1.5,
+      "co2_sequestration_kg_yr": 3.0,
+      "cooling_delta_c": -0.9,
+      "nursery_cost_idr": 25000,
+      "planted_cost_idr": 40000,
+      "annual_maintenance_idr": 10000,
+      "ideal_road_types": ["primary", "secondary"],
+      "source": {
+        "type": "Surabaya City Landscaping Guidelines",
+        "title": "Pedoman Penataan Jalur Hijau Median Jalan Kota Surabaya (DKRTH 2023)",
+        "url": "https://surabaya.go.id",
+        "notes": "High survival rate in Surabaya tropical climate."
+      }
+    },
+    {
+      "id": "ground_rumput_gajah_mini",
+      "name": "Rumput Gajah Mini / Dwarf Carpet Grass (Axonopus compressus cv. Dwarf)",
+      "category": "groundcover",
+      "subcategory": "turf_grass",
+      "botanical_name": "Axonopus compressus cv. Dwarf",
+      "description": "Dense, low-growing carpet grass preventing soil erosion along road shoulders and reducing land surface temperature by 3.5°C compared to bare asphalt/concrete.",
+      "canopy_radius_m": 2.0,
+      "height_m": 0.05,
+      "co2_sequestration_kg_yr": 1.8,
+      "cooling_delta_c": -2.5,
+      "nursery_cost_idr": 28000,
+      "planted_cost_idr": 42000,
+      "annual_maintenance_idr": 8000,
+      "ideal_road_types": ["primary", "secondary", "tertiary", "residential", "pedestrian"],
+      "source": {
+        "type": "Marketplace Listing",
+        "title": "Taman Flora Surabaya Vendor Listing",
+        "url": "https://www.tokopedia.com/find/rumput-gajah-mini-per-meter",
+        "notes": "Price per square meter installed with humus topsoil."
+      }
+    },
+    {
+      "id": "vertical_frame_lky",
+      "name": "Lee Kuan Yew Facade Trellis Frame (Vernonia elliptica)",
+      "category": "vertical_greening",
+      "subcategory": "facade_green_wall",
+      "botanical_name": "Vernonia elliptica",
+      "description": "Singapore-style modular planter box and stainless steel wire trellis with drip irrigation. Drops building wall surface temperature by 2.4 - 3.8°C.",
+      "canopy_radius_m": 1.0,
+      "height_m": 3.0,
+      "co2_sequestration_kg_yr": 8.5,
+      "cooling_delta_c": -2.4,
+      "nursery_cost_idr": 450000,
+      "planted_cost_idr": 680000,
+      "annual_maintenance_idr": 45000,
+      "ideal_road_types": [],
+      "source": {
+        "type": "Peer-Reviewed Paper & Singapore Standard",
+        "title": "Perini, K. et al. (2017). 'Vertical greening systems and thermal performance in tropical and Mediterranean climates'. Energy and Buildings, 143, 35-42",
+        "url": "https://doi.org/10.1016/j.enbuild.2017.06.015",
+        "notes": "Cost per square meter facade area including stainless steel tension cables, planter troughs, and drip piping."
+      }
+    }
+  ],
+  "economic_regulatory_params": {
+    "pln_tariff_idr_per_kwh": 1444.70,
+    "pln_tariff_name": "Tarif B-3 / TM (Bisnis Menengah di atas 200 kVA) & P-1",
+    "regulation": "Permen ESDM No. 2 Tahun 2024 tentang PLTS Atap",
+    "self_consumption_ratio": 1.0,
+    "export_credit_factor": 0.0,
+    "grid_emission_factor_kg_per_kwh": 0.79,
+    "carbon_price_idr_per_ton": 69600.0,
+    "carbon_market_name": "IDXCarbon / Bursa Karbon Indonesia (Nilai Ekonomi Karbon)",
+    "discount_rate_pct": 6.5,
+    "inflation_rate_pct": 3.0,
+    "inverter_replacement_year": 12,
+    "inverter_cost_ratio_pct": 15.0
+  }
+}

@@ -1,33 +1,51 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg-canvas: #faf9f6;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f5f2eb;
+  --border-subtle: #ede8e1;
+  --border-strong: #d6cebf;
+  --text-main: #1c1917;
+  --text-body: #44403c;
+  --text-muted: #78716c;
+  
+  --solar-accent: #b45309;
+  --solar-bg: #fef3c7;
+  --hydro-accent: #0284c7;
+  --hydro-bg: #e0f2fe;
+  --eco-accent: #15803d;
+  --eco-bg: #dcfce7;
+
+  /* PrimeVue Aura Theme Variable Overrides */
+  --surface-ground: #faf9f6;
+  --surface-section: #ffffff;
+  --surface-card: #ffffff;
+  --surface-overlay: #ffffff;
+  --surface-border: #ede8e1;
+  --text-color: #1c1917;
+  --text-color-secondary: #78716c;
+}
+
+* {
+  box-sizing: border-box;
+}
 
 body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    background-color: #1e1e1e;
-    color: #e2e8f0;
+  margin: 0;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  background-color: var(--bg-canvas);
+  color: var(--text-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-.p-sidebar {
-    font-size: 0.9rem;
-}
-
-h3 {
-    font-size: 1.15rem;
-    margin-bottom: 0.5rem;
-}
-
-/* PrimeVue Aura Dark Theme Overrides for Digital Twin Glassmorphism */
-:root {
-  --surface-ground: #0f172a;
-  --surface-section: #1e293b;
-  --surface-card: #1e293b;
-  --surface-overlay: #0f172a;
-  --surface-border: rgba(148, 163, 184, 0.15);
-  --text-color: #f1f5f9;
-  --text-color-secondary: #94a3b8;
+.font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
 }
 
 /* Custom Slim Scrollbars */
@@ -37,127 +55,140 @@ h3 {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: #f5f2eb;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
+  background: #d6cebf;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
+  background: #a8a29e;
 }
 
-/* PrimeVue Accordion Dark Theming */
+/* PrimeVue Accordion Light Theming */
 .p-accordion {
   background: transparent !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 6px !important;
+  gap: 8px !important;
 }
 
 .p-accordionpanel {
-  border: 1px solid rgba(148, 163, 184, 0.14) !important;
+  border: 1px solid var(--border-subtle) !important;
   border-radius: 8px !important;
   overflow: hidden !important;
-  background: rgba(15, 23, 42, 0.5) !important;
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(41, 37, 36, 0.02) !important;
 }
 
 .p-accordionheader {
-  background: rgba(30, 41, 59, 0.7) !important;
-  color: #f1f5f9 !important;
+  background: #faf9f6 !important;
+  color: var(--text-main) !important;
   border: none !important;
-  padding: 8px 12px !important;
+  padding: 10px 14px !important;
   font-size: 12px !important;
   font-weight: 600 !important;
   transition: background 0.15s ease !important;
 }
 
 .p-accordionheader:hover {
-  background: rgba(51, 65, 85, 0.85) !important;
-  color: #ffffff !important;
+  background: #f2ede4 !important;
 }
 
 .p-accordionheader-toggle-icon {
-  color: #94a3b8 !important;
-  font-size: 11px !important;
+  color: var(--text-muted) !important;
+  font-size: 10px !important;
 }
 
 .p-accordioncontent {
-  background: transparent !important;
+  background: #ffffff !important;
   border: none !important;
 }
 
 .p-accordioncontent-content {
-  background: rgba(15, 23, 42, 0.4) !important;
-  color: #cbd5e1 !important;
-  border-top: 1px solid rgba(148, 163, 184, 0.1) !important;
-  padding: 10px 10px !important;
+  background: #ffffff !important;
+  color: var(--text-body) !important;
+  border-top: 1px solid var(--border-subtle) !important;
+  padding: 12px !important;
 }
 
-/* PrimeVue Popover Dark Theming */
+/* PrimeVue Popover Light Theming */
 .p-popover {
-  background: rgba(15, 23, 42, 0.96) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  background: #ffffff !important;
+  border: 1px solid var(--border-subtle) !important;
   border-radius: 10px !important;
-  color: #f1f5f9 !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6) !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 10px 25px rgba(41, 37, 36, 0.08) !important;
 }
 
 .p-popover-content {
   background: transparent !important;
-  padding: 10px 12px !important;
+  padding: 12px 14px !important;
 }
 
-.p-popover:before,
-.p-popover:after {
-  border-bottom-color: rgba(15, 23, 42, 0.96) !important;
-}
-
-/* PrimeVue Select Dark Overrides */
+/* PrimeVue Select Dropdown Light */
 .p-select {
-  background: rgba(30, 41, 59, 0.8) !important;
-  border: 1px solid rgba(148, 163, 184, 0.2) !important;
-  color: #f1f5f9 !important;
+  background: #faf9f6 !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-main) !important;
   border-radius: 6px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .p-select:hover {
-  border-color: rgba(56, 189, 248, 0.5) !important;
+  border-color: var(--border-strong) !important;
 }
 
 .p-select-label {
-  color: #f1f5f9 !important;
-  font-size: 11.5px !important;
+  color: var(--text-main) !important;
+  font-size: 12px !important;
+  padding: 0 10px !important;
 }
 
 .p-select-dropdown {
-  color: #94a3b8 !important;
+  color: var(--text-muted) !important;
+  width: 24px !important;
 }
 
 .p-select-overlay {
-  background: rgba(15, 23, 42, 0.96) !important;
-  border: 1px solid rgba(148, 163, 184, 0.2) !important;
-  backdrop-filter: blur(16px) !important;
-  color: #f1f5f9 !important;
+  background: #ffffff !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 8px 24px rgba(41, 37, 36, 0.08) !important;
 }
 
 .p-select-option {
-  color: #cbd5e1 !important;
-  font-size: 11.5px !important;
+  color: var(--text-body) !important;
+  font-size: 12px !important;
   padding: 6px 10px !important;
 }
 
 .p-select-option:hover,
 .p-select-option.p-focus {
-  background: rgba(51, 65, 85, 0.8) !important;
-  color: #38bdf8 !important;
+  background: #f5f2eb !important;
+  color: var(--text-main) !important;
 }
 
 .p-select-option.p-select-option-selected {
-  background: rgba(2, 132, 199, 0.3) !important;
-  color: #38bdf8 !important;
+  background: #ede8e1 !important;
+  color: var(--text-main) !important;
+  font-weight: 600 !important;
+}
+
+/* PrimeVue Buttons */
+.p-button {
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  transition: all 0.15s ease !important;
+}
+
+.p-button.p-button-sm {
+  height: 32px !important;
+  padding: 0 12px !important;
 }
