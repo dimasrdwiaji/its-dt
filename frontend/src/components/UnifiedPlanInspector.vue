@@ -2,7 +2,22 @@
 import { ref, computed, watch } from 'vue'
 import { useMapStore } from '@/stores/mapStore'
 import { useScenarioStore } from '@/stores/scenarioStore'
-import catalog from '@/data/intervention_catalog.json'
+import {
+  catalog,
+  getSolarSpec,
+  getTorenSpec,
+  getPlantSpec,
+  getLivingWallSpec,
+  getDryWellSpec,
+  getRetentionPondSpec,
+  calculateSolar,
+  calculateToren,
+  calculateGreening,
+  calculateTree,
+  calculateDryWell,
+  calculateRetentionPond,
+  buildInterventionItem
+} from '@/engine'
 import * as turf from '@turf/turf'
 
 const mapStore = useMapStore()
@@ -66,216 +81,202 @@ const torenOccupiedM2 = computed(() => {
 const totalRoofOccupiedM2 = computed(() => Math.round(solarOccupiedM2.value + torenOccupiedM2.value))
 const availableRoofM2 = computed(() => Math.max(0, totalUsableRoofM2.value - totalRoofOccupiedM2.value))
 
-// ================= SOLAR PV (from intervention_catalog.json) =================
+// ================= SOLAR PV (via InterventionEngine) =================
 const solarOptions = computed(() => catalog.solar_pv)
 const selectedSolarId = ref(catalog.solar_pv[0].id)
 const solarAreaInput = ref(300)
 
-const selectedSolarSpec = computed(() => {
-  return solarOptions.value.find(s => s.id === selectedSolarId.value) || solarOptions.value[0]
-})
+const selectedSolarSpec = computed(() => getSolarSpec(selectedSolarId.value))
+const solarCalc = computed(() => calculateSolar(solarAreaInput.value, selectedSolarId.value))
 
-const solarPanelsCount = computed(() => {
-  return Math.floor(solarAreaInput.value / selectedSolarSpec.value.area_m2)
-})
+const solarPanelsCount = computed(() => solarCalc.value.panelsCount)
+const solarKwpCapacity = computed(() => solarCalc.value.kwpCapacity)
+const solarCapEx = computed(() => solarCalc.value.capExIdr)
+const solarAnnualKwh = computed(() => solarCalc.value.annualKwh)
+const solarAnnualSavingsIdr = computed(() => solarCalc.value.annualSavingsIdr)
+const solarSimplePayback = computed(() => solarCalc.value.simplePaybackYears)
 
-const solarKwpCapacity = computed(() => {
-  return Number(((solarPanelsCount.value * selectedSolarSpec.value.power_wp) / 1000).toFixed(1))
-})
-
-const solarCapEx = computed(() => {
-  return Math.round(solarKwpCapacity.value * selectedSolarSpec.value.cost_turnkey_per_kwp_idr)
-})
-
-const solarAnnualKwh = computed(() => {
-  // 1 kWp in Surabaya yields ~1,450 kWh/yr
-  return Math.round(solarKwpCapacity.value * 1450)
-})
-
-const solarAnnualSavingsIdr = computed(() => {
-  return Math.round(solarAnnualKwh.value * catalog.economic_regulatory_params.pln_tariff_idr_per_kwh)
-})
-
-const solarSimplePayback = computed(() => {
-  if (solarAnnualSavingsIdr.value <= 0) return 0
-  return Number((solarCapEx.value / solarAnnualSavingsIdr.value).toFixed(1))
-})
-
-// ================= TOREN TANKS (from intervention_catalog.json) =================
+// ================= TOREN TANKS (via InterventionEngine) =================
 const torenOptions = computed(() => catalog.toren_tanks)
 const selectedTorenId = ref(catalog.toren_tanks[3].id) // Default 5,000 L
 const torenCount = ref(2)
 
-const selectedTorenSpec = computed(() => {
-  return torenOptions.value.find(t => t.id === selectedTorenId.value) || torenOptions.value[0]
-})
+const selectedTorenSpec = computed(() => getTorenSpec(selectedTorenId.value))
+const torenCalc = computed(() => calculateToren(torenCount.value, selectedTorenId.value, totalUsableRoofM2.value))
 
-const torenStorageLiters = computed(() => {
-  return torenCount.value * selectedTorenSpec.value.capacity_liters
-})
+const torenStorageLiters = computed(() => torenCalc.value.totalStorageLiters)
+const torenRoofAreaUsed = computed(() => torenCalc.value.roofAreaOccupiedM2)
+const torenCapEx = computed(() => torenCalc.value.capExIdr)
 
-const torenRoofAreaUsed = computed(() => {
-  const radius = selectedTorenSpec.value.diameter_m / 2
-  return Number((torenCount.value * Math.PI * radius * radius).toFixed(1))
-})
-
-const torenCapEx = computed(() => {
-  return torenCount.value * selectedTorenSpec.value.cost_installed_idr
-})
-
-// ================= LIVING WALLS (from intervention_catalog.json) =================
-const livingWallSpec = computed(() => {
-  return catalog.plants.find(p => p.id === 'vertical_frame_lky') || {
-    name: 'Lee Kuan Yew Facade Trellis Frame (Vernonia elliptica)',
-    planted_cost_idr: 680000,
-    co2_sequestration_kg_yr: 8.5,
-    cooling_delta_c: -2.4
-  }
-})
+// ================= LIVING WALLS (via InterventionEngine) =================
+const livingWallSpec = computed(() => getLivingWallSpec())
 const greeningAreaInput = ref(150)
-const greeningCapEx = computed(() => greeningAreaInput.value * livingWallSpec.value.planted_cost_idr)
-const greeningCo2Tons = computed(() => {
-  return Number(((greeningAreaInput.value * livingWallSpec.value.co2_sequestration_kg_yr) / 1000).toFixed(2))
-})
+const greeningCalc = computed(() => calculateGreening(greeningAreaInput.value))
 
-// ================= ROADSIDE TREES (from intervention_catalog.json) =================
+const greeningCapEx = computed(() => greeningCalc.value.capExIdr)
+const greeningCo2Tons = computed(() => greeningCalc.value.co2OffsetTonsYr)
+
+// ================= ROADSIDE TREES (via InterventionEngine) =================
 const treeSpeciesOptions = computed(() => {
   return catalog.plants.filter(p => p.category === 'tree' || p.category === 'shrub' || p.category === 'groundcover')
 })
 const treeQuantity = ref(8)
 
-const selectedTreeSpec = computed(() => {
-  return treeSpeciesOptions.value.find(p => p.id === mapStore.selectedTreeSpecies) || treeSpeciesOptions.value[0]
-})
+const selectedTreeSpec = computed(() => getPlantSpec(mapStore.selectedTreeSpecies))
+const treeCalc = computed(() => calculateTree(treeQuantity.value, mapStore.selectedTreeSpecies))
 
-const treeTotalCanopyM2 = computed(() => {
-  const r = selectedTreeSpec.value.canopy_radius_m || 2.5
-  return Number((treeQuantity.value * Math.PI * r * r).toFixed(1))
-})
+const treeTotalCanopyM2 = computed(() => treeCalc.value.totalCanopyM2)
+const treeCapEx = computed(() => treeCalc.value.capExIdr)
+const treeTotalCo2Kg = computed(() => treeCalc.value.co2OffsetKgYr)
 
-const treeCapEx = computed(() => {
-  return treeQuantity.value * (selectedTreeSpec.value.planted_cost_idr || 425000)
-})
-
-const treeTotalCo2Kg = computed(() => {
-  return Number((treeQuantity.value * (selectedTreeSpec.value.co2_sequestration_kg_yr || 12.5)).toFixed(1))
-})
-
-// ================= GROUND & WATER (from intervention_catalog.json) =================
-const dryWellSpec = computed(() => catalog.dry_wells[0])
-const pondSpec = computed(() => catalog.retention_ponds[0])
+// ================= GROUND & WATER (via InterventionEngine) =================
+const dryWellSpec = computed(() => getDryWellSpec())
+const pondSpec = computed(() => getRetentionPondSpec())
 const pondAreaM2 = computed(() => mapStore.pendingPond?.areaM2 || 120)
 const pondDepthM = ref(1.5)
-const pondVolumeM3 = computed(() => Math.round(pondAreaM2.value * pondDepthM.value))
-const pondCapEx = computed(() => Math.round(pondVolumeM3.value * pondSpec.value.cost_per_m3_storage_idr))
+
+const pondCalc = computed(() => calculateRetentionPond(pondAreaM2.value, pondDepthM.value))
+const pondVolumeM3 = computed(() => pondCalc.value.totalVolumeM3)
+const pondCapEx = computed(() => pondCalc.value.capExIdr)
 
 // ================= ACTIONS =================
 function addSolarIntervention() {
   if (!bldg.value) return
-  scenarioStore.addIntervention({
-    id: `solar_${bldg.value.id}_${Date.now()}`,
-    buildingId: bldg.value.id,
-    buildingName: buildingName.value,
-    module: 'energy',
-    type: 'rooftop_pv',
-    name: selectedSolarSpec.value.name,
-    quantity: solarPanelsCount.value,
-    unit: 'panels',
-    costIdr: solarCapEx.value,
-    energyMWhYr: Number((solarAnnualKwh.value / 1000).toFixed(1)),
-    metadata: {
-      areaOccupiedM2: solarAreaInput.value,
-      kwp: solarKwpCapacity.value,
-      modelId: selectedSolarSpec.value.id
-    }
-  })
+  const calc = solarCalc.value
+  scenarioStore.addIntervention(
+    buildInterventionItem({
+      id: `solar_${bldg.value.id}_${Date.now()}`,
+      buildingId: bldg.value.id,
+      buildingName: buildingName.value,
+      module: 'energy',
+      type: 'rooftop_pv',
+      name: calc.modelName,
+      quantity: calc.panelsCount,
+      unit: 'panels',
+      costIdr: calc.capExIdr,
+      co2OffsetKgYr: calc.co2OffsetKgYr,
+      energyMWhYr: calc.annualEnergyMWh,
+      metadata: {
+        areaOccupiedM2: calc.areaOccupiedM2,
+        kwp: calc.kwpCapacity,
+        modelId: calc.modelId
+      }
+    })
+  )
 }
 
 function addTorenIntervention() {
   if (!bldg.value) return
-  scenarioStore.addIntervention({
-    id: `toren_${bldg.value.id}_${Date.now()}`,
-    buildingId: bldg.value.id,
-    buildingName: buildingName.value,
-    module: 'hydrology',
-    type: 'rooftop_toren',
-    name: selectedTorenSpec.value.name,
-    quantity: torenCount.value,
-    unit: 'units',
-    costIdr: torenCapEx.value,
-    metadata: {
-      areaOccupiedM2: torenRoofAreaUsed.value,
-      storageLiters: torenStorageLiters.value,
-      modelId: selectedTorenSpec.value.id
-    }
-  })
+  const calc = torenCalc.value
+  scenarioStore.addIntervention(
+    buildInterventionItem({
+      id: `toren_${bldg.value.id}_${Date.now()}`,
+      buildingId: bldg.value.id,
+      buildingName: buildingName.value,
+      module: 'hydrology',
+      type: 'rooftop_toren',
+      name: calc.modelName,
+      quantity: calc.torenCount,
+      unit: 'units',
+      costIdr: calc.capExIdr,
+      storageM3: calc.totalStorageM3,
+      metadata: {
+        areaOccupiedM2: calc.roofAreaOccupiedM2,
+        storageLiters: calc.totalStorageLiters,
+        retentionPct: calc.retentionPct,
+        modelId: calc.modelId
+      }
+    })
+  )
 }
 
 function addGreeningIntervention() {
   if (!bldg.value) return
-  scenarioStore.addIntervention({
-    id: `green_${bldg.value.id}_${Date.now()}`,
-    buildingId: bldg.value.id,
-    buildingName: buildingName.value,
-    module: 'ecology',
-    type: 'vertical_greening',
-    name: livingWallSpec.value.name,
-    quantity: greeningAreaInput.value,
-    unit: 'm²',
-    costIdr: greeningCapEx.value,
-    co2OffsetTons: greeningCo2Tons.value
-  })
+  const calc = greeningCalc.value
+  scenarioStore.addIntervention(
+    buildInterventionItem({
+      id: `green_${bldg.value.id}_${Date.now()}`,
+      buildingId: bldg.value.id,
+      buildingName: buildingName.value,
+      module: 'ecology',
+      type: 'vertical_greening',
+      name: calc.systemName,
+      quantity: calc.areaM2,
+      unit: 'm²',
+      costIdr: calc.capExIdr,
+      co2OffsetKgYr: calc.co2OffsetKgYr,
+      coolingDeltaC: calc.coolingDeltaC
+    })
+  )
 }
 
 function addRoadsideTreesIntervention() {
-  scenarioStore.addIntervention({
-    id: `trees_${Date.now()}`,
-    buildingName: 'Campus Roadside Corridor',
-    module: 'ecology',
-    type: 'ground_tree',
-    name: selectedTreeSpec.value.name,
-    quantity: treeQuantity.value,
-    unit: selectedTreeSpec.value.category === 'groundcover' ? 'm²' : 'specimens',
-    costIdr: treeCapEx.value,
-    co2OffsetTons: Number((treeTotalCo2Kg.value / 1000).toFixed(2)),
-    metadata: {
-      canopyM2: treeTotalCanopyM2.value,
-      speciesId: selectedTreeSpec.value.id
-    }
-  })
+  const calc = treeCalc.value
+  scenarioStore.addIntervention(
+    buildInterventionItem({
+      id: `trees_${Date.now()}`,
+      buildingName: 'Campus Roadside Corridor',
+      module: 'ecology',
+      type: 'ground_tree',
+      name: calc.speciesName,
+      quantity: calc.quantity,
+      unit: calc.category === 'groundcover' ? 'm²' : 'specimens',
+      costIdr: calc.capExIdr,
+      co2OffsetKgYr: calc.co2OffsetKgYr,
+      coolingDeltaC: calc.coolingDeltaC,
+      metadata: {
+        canopyM2: calc.totalCanopyM2,
+        speciesId: calc.speciesId
+      }
+    })
+  )
 }
 
 function addDryWellIntervention() {
-  scenarioStore.addIntervention({
-    id: `drywell_${Date.now()}`,
-    buildingName: 'Campus Infiltration Zone',
-    module: 'hydrology',
-    type: 'dry_well',
-    name: dryWellSpec.value.name,
-    quantity: 1,
-    unit: 'well',
-    costIdr: dryWellSpec.value.cost_installed_idr,
-    metadata: {
-      volumeM3: dryWellSpec.value.storage_m3
-    }
-  })
+  const calc = calculateDryWell(1)
+  scenarioStore.addIntervention(
+    buildInterventionItem({
+      id: `drywell_${Date.now()}`,
+      buildingName: 'Campus Infiltration Zone',
+      module: 'hydrology',
+      type: 'ground_dry_well',
+      name: calc.modelName,
+      quantity: calc.quantity,
+      unit: 'well',
+      costIdr: calc.capExIdr,
+      storageM3: calc.totalStorageM3,
+      coordinates: mapStore.pendingLocation ? [mapStore.pendingLocation[0], mapStore.pendingLocation[1]] : undefined,
+      metadata: {
+        volumeM3: calc.totalStorageM3,
+        catchmentRadiusM: calc.catchmentRadiusM,
+        modelId: calc.modelId
+      }
+    })
+  )
 }
 
 function addPondIntervention() {
-  scenarioStore.addIntervention({
-    id: `pond_${Date.now()}`,
-    buildingName: 'Campus Retention Pond',
-    module: 'hydrology',
-    type: 'retention_pond',
-    name: pondSpec.value.name,
-    quantity: pondVolumeM3.value,
-    unit: 'm³ storage',
-    costIdr: pondCapEx.value,
-    metadata: {
-      areaM2: pondAreaM2.value,
-      depthM: pondDepthM.value
-    }
-  })
+  const calc = pondCalc.value
+  scenarioStore.addIntervention(
+    buildInterventionItem({
+      id: `pond_${Date.now()}`,
+      buildingName: 'Campus Retention Pond',
+      module: 'hydrology',
+      type: 'ground_retention_pond',
+      name: calc.modelName,
+      quantity: calc.totalVolumeM3,
+      unit: 'm³ storage',
+      costIdr: calc.capExIdr,
+      storageM3: calc.totalVolumeM3,
+      polygon: mapStore.pendingPond?.polygon,
+      metadata: {
+        areaM2: calc.areaM2,
+        depthM: calc.depthM,
+        catchmentRadiusM: calc.catchmentRadiusM,
+        modelId: calc.modelId
+      }
+    })
+  )
 }
 
 watch(
